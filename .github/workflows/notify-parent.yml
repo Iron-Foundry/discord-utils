@@ -11,6 +11,6 @@ jobs:
       - uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.SUBMODULE_PAT }}
-          repository: Iron-Foundry/The-Foundry-Project
+          repository: Iron-Foundry/Foundry-Project
           event-type: submodule-updated
           client-payload: '{"submodule": "discord-utils"}'
