@@ -1,7 +1,11 @@
 [project]
 name = "discord-utils"
 version = "0.1.0"
-description = "Add your description here"
+description = "Shared Discord utilities for the Iron Foundry clan."
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []
+requires-python = ">=3.14"
+dependencies = [
+    "discord-py>=2.7.1",
+    "loguru>=0.7.3",
+    "python-dotenv>=1.2.2",
+]
