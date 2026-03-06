@@ -12,6 +12,8 @@ class ConfigVars(str, Enum):
     DEBUG_MODE = "DEBUG_MODE"
     MONGO_URI = "MONGO_URI"
     MONGO_DB_NAME = "MONGO_DB_NAME"
+    STAFF_ROLE_ID = "STAFF_ROLE_ID"
+    SENIOR_STAFF_ROLE_ID = "SENIOR_STAFF_ROLE_ID"
 
 
 class ConfigInterface:

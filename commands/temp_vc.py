@@ -6,6 +6,8 @@ import discord
 from discord import app_commands
 from loguru import logger
 
+from commands.checks import handle_check_failure, is_senior_staff, is_staff
+
 if TYPE_CHECKING:
     from temp_vc.service import TempVCService
 
@@ -27,13 +29,18 @@ class GIMGroup(app_commands.Group, name="gim", description="Manage GIM group rol
         super().__init__()
         self._service = service
 
+    async def on_error(
+        self, interaction: discord.Interaction, error: app_commands.AppCommandError
+    ) -> None:
+        await handle_check_failure(interaction, error)
+
     # ------------------------------------------------------------------
     # /tempvc gim add <role>
     # ------------------------------------------------------------------
 
     @app_commands.command(name="add", description="Add a role as a GIM group")
     @app_commands.describe(role="The role to add as a GIM group")
-    @app_commands.default_permissions(administrator=True)
+    @is_senior_staff()
     async def add(self, interaction: discord.Interaction, role: discord.Role) -> None:
         logger.debug(
             f"TempVC: gim add invoked by {interaction.user}, role={role.name!r}"
@@ -54,7 +61,7 @@ class GIMGroup(app_commands.Group, name="gim", description="Manage GIM group rol
 
     @app_commands.command(name="remove", description="Remove a role from GIM groups")
     @app_commands.describe(role="The role to remove")
-    @app_commands.default_permissions(administrator=True)
+    @is_senior_staff()
     async def remove(
         self, interaction: discord.Interaction, role: discord.Role
     ) -> None:
@@ -76,7 +83,7 @@ class GIMGroup(app_commands.Group, name="gim", description="Manage GIM group rol
     # ------------------------------------------------------------------
 
     @app_commands.command(name="list", description="List all GIM group roles")
-    @app_commands.default_permissions(manage_guild=True)
+    @is_staff()
     async def list_gim(self, interaction: discord.Interaction) -> None:
         logger.debug(f"TempVC: gim list invoked by {interaction.user}")
         role_ids = self._service.gim_role_ids
@@ -101,6 +108,11 @@ class TempVCGroup(app_commands.Group, name="tempvc", description="Temp VC manage
         self._service = service
         self.add_command(GIMGroup(service=service))
 
+    async def on_error(
+        self, interaction: discord.Interaction, error: app_commands.AppCommandError
+    ) -> None:
+        await handle_check_failure(interaction, error)
+
     # ------------------------------------------------------------------
     # /tempvc setup <category>
     # ------------------------------------------------------------------
@@ -112,7 +124,7 @@ class TempVCGroup(app_commands.Group, name="tempvc", description="Temp VC manage
     @app_commands.describe(
         category="The category where the trigger channel will be created"
     )
-    @app_commands.default_permissions(administrator=True)
+    @is_senior_staff()
     async def setup(
         self,
         interaction: discord.Interaction,

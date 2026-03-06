@@ -7,6 +7,7 @@ import discord
 from discord import app_commands
 from loguru import logger
 
+from commands.checks import handle_check_failure, is_staff
 from imagegen.canvas import OTWCanvas
 from imagegen.fonts import FontSet
 from imagegen.icons import BossIcon, SkillIcon
@@ -128,7 +129,7 @@ def make_otw_command() -> app_commands.Command:  # type: ignore[type-arg]
         boss=boss_autocomplete,
         raid=raid_autocomplete,
     )
-    @app_commands.default_permissions(manage_guild=True)
+    @is_staff()
     async def otw(
         interaction: discord.Interaction,
         date: str,
@@ -184,5 +185,11 @@ def make_otw_command() -> app_commands.Command:  # type: ignore[type-arg]
         buf.seek(0)
 
         await interaction.followup.send(file=discord.File(buf, filename="otw.png"))
+
+    @otw.error
+    async def otw_error(
+        interaction: discord.Interaction, error: app_commands.AppCommandError
+    ) -> None:
+        await handle_check_failure(interaction, error)
 
     return otw  # type: ignore[return-value]
