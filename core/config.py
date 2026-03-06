@@ -10,6 +10,8 @@ class ConfigVars(str, Enum):
     DISCORD_TOKEN = "DISCORD_TOKEN"
     GUILD_ID = "GUILD_ID"
     DEBUG_MODE = "DEBUG_MODE"
+    MONGO_URI = "MONGO_URI"
+    MONGO_DB_NAME = "MONGO_DB_NAME"
 
 
 class ConfigInterface:
