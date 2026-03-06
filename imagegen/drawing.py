@@ -126,7 +126,10 @@ def draw_underlined_text(
     """Draw text with a decorative underline."""
     x, y = xy
     bbox = draw.textbbox(
-        (x, y), text, font=font, anchor=anchor  # type: ignore[arg-type]
+        (x, y),
+        text,
+        font=font,
+        anchor=anchor,  # type: ignore[arg-type]
     )
     left, top, right, bottom = bbox
 
@@ -153,5 +156,9 @@ def draw_underlined_text(
         )
 
     draw.text(
-        (x, y), text, font=font, fill=fill, anchor=anchor  # type: ignore[arg-type]
+        (x, y),
+        text,
+        font=font,
+        fill=fill,
+        anchor=anchor,  # type: ignore[arg-type]
     )

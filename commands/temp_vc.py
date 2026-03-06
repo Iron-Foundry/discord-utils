@@ -7,14 +7,42 @@ from discord import app_commands
 from loguru import logger
 
 from commands.checks import handle_check_failure, is_senior_staff, is_staff
+from commands.help_registry import HelpEntry, HelpGroup, HelpRegistry
 
 if TYPE_CHECKING:
     from temp_vc.service import TempVCService
 
 
-def register_help() -> None:
-    """Placeholder for help registration if a registry is added later."""
-    logger.debug("TempVC: help registration skipped (no registry in discord-utils)")
+def register_help(registry: HelpRegistry) -> None:
+    """Register help entries for the tempvc command group."""
+    registry.add_group(
+        HelpGroup(
+            name="tempvc",
+            description="Manage temporary voice channels",
+            commands=[
+                HelpEntry(
+                    "/tempvc setup <category>",
+                    "Create the trigger voice channel in a category",
+                    "Senior Staff",
+                ),
+                HelpEntry(
+                    "/tempvc gim add <role>",
+                    "Add a role as a GIM group (members share a temp VC)",
+                    "Senior Staff",
+                ),
+                HelpEntry(
+                    "/tempvc gim remove <role>",
+                    "Remove a role from GIM groups",
+                    "Senior Staff",
+                ),
+                HelpEntry(
+                    "/tempvc gim list",
+                    "List all configured GIM group roles",
+                    "Staff",
+                ),
+            ],
+        )
+    )
 
 
 # ---------------------------------------------------------------------------

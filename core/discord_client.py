@@ -7,6 +7,7 @@ from typing import Any, override
 import discord
 from loguru import logger
 
+from commands.help_registry import HelpRegistry
 from core.command_handler import CommandHandler
 from core.config import ConfigInterface, ConfigVars
 from core.service_handler import ServiceHandler
@@ -20,6 +21,7 @@ class DiscordClient(discord.Client):
         self._guild: discord.Guild | None = None
         self.debug: bool = debug
         self.command_handler: CommandHandler = CommandHandler(client=self)
+        self.help_registry: HelpRegistry = HelpRegistry()
         self.service_handler: ServiceHandler = ServiceHandler()
         self._services_loaded: bool = False
         self._bg_tasks: set[asyncio.Task[Any]] = set()
@@ -52,6 +54,7 @@ class DiscordClient(discord.Client):
         services = await load_all_services(
             guild=self._guild,
             tree=self.command_handler.tree,
+            registry=self.help_registry,
             client=self,
             mongo_uri=mongo_uri,
             db_name=db_name,
