@@ -10,8 +10,8 @@ import plotly.graph_objects as go
 from discord import app_commands
 from loguru import logger
 
-from commands.checks import handle_check_failure, is_staff
-from commands.help_registry import HelpEntry, HelpGroup, HelpRegistry
+from command_infra.checks import handle_check_failure, is_staff
+from command_infra.help_registry import HelpEntry, HelpGroup, HelpRegistry
 
 _BG = "#313338"
 _GRID = "#383a40"

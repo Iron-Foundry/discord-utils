@@ -7,7 +7,7 @@ import discord
 from discord import app_commands
 from loguru import logger
 
-from commands.checks import handle_check_failure, is_staff
+from command_infra.checks import handle_check_failure, is_staff
 from imagegen.canvas import OTWCanvas
 from imagegen.fonts import FontSet
 from imagegen.icons import BossIcon, SkillIcon

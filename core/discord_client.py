@@ -7,7 +7,7 @@ from typing import Any, override
 import discord
 from loguru import logger
 
-from commands.help_registry import HelpRegistry
+from command_infra.help_registry import HelpRegistry
 from core.command_handler import CommandHandler
 from core.config import ConfigInterface, ConfigVars
 from core.service_handler import ServiceHandler

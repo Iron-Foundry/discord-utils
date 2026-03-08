@@ -8,8 +8,8 @@ import discord
 from discord import app_commands
 from loguru import logger
 
-from commands.checks import handle_check_failure, is_staff
-from commands.help_registry import HelpEntry, HelpGroup, HelpRegistry
+from command_infra.checks import handle_check_failure, is_staff
+from command_infra.help_registry import HelpEntry, HelpGroup, HelpRegistry
 from core.throttle import Throttle
 
 _ROLE_ASSIGN_RATE = 1.0  # role assignments per second

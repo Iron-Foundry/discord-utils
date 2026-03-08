@@ -5,7 +5,7 @@ from typing import Any
 import discord
 from discord import app_commands
 
-from commands.help_registry import HelpEntry, HelpGroup, HelpRegistry
+from command_infra.help_registry import HelpEntry, HelpGroup, HelpRegistry
 
 _ACCESS_BADGES = {
     "Everyone": "🟢 Everyone",

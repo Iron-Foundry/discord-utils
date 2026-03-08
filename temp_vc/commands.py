@@ -6,8 +6,8 @@ import discord
 from discord import app_commands
 from loguru import logger
 
-from commands.checks import handle_check_failure, is_senior_staff, is_staff
-from commands.help_registry import HelpEntry, HelpGroup, HelpRegistry
+from command_infra.checks import handle_check_failure, is_senior_staff, is_staff
+from command_infra.help_registry import HelpEntry, HelpGroup, HelpRegistry
 
 if TYPE_CHECKING:
     from temp_vc.service import TempVCService

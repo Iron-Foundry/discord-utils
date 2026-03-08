@@ -9,7 +9,7 @@ import discord
 from discord import app_commands
 from loguru import logger
 
-from commands.help_registry import HelpRegistry
+from command_infra.help_registry import HelpRegistry
 
 if TYPE_CHECKING:
     from core.discord_client import DiscordClient
@@ -25,7 +25,7 @@ async def load_temp_vc_service(
     client: DiscordClient,
 ) -> TempVCService:
     """Initialise the temp VC service and register its slash commands."""
-    from commands.temp_vc import TempVCGroup, register_help
+    from temp_vc.commands import TempVCGroup, register_help
     from temp_vc.events import register as register_temp_vc_events
     from temp_vc.repository import MongoTempVCRepository
     from temp_vc.service import TempVCService
@@ -47,8 +47,8 @@ def _register_otw_commands(
     registry: HelpRegistry,
 ) -> None:
     """Register the /otw command (stateless, no DB) and its help entry."""
-    from commands.help_registry import HelpEntry, HelpGroup
-    from commands.otw import make_otw_command
+    from command_infra.help_registry import HelpEntry, HelpGroup
+    from command_infra.otw import make_otw_command
 
     tree.add_command(make_otw_command(), guild=guild)
     registry.add_group(
@@ -72,7 +72,7 @@ def _load_help_command(
     tree: app_commands.CommandTree,
     registry: HelpRegistry,
 ) -> None:
-    from commands.help import make_help_command, register_help
+    from command_infra.help import make_help_command, register_help
 
     register_help(registry)
     tree.add_command(make_help_command(registry), guild=guild)
@@ -85,7 +85,7 @@ def _register_roleall_command(
     registry: HelpRegistry,
 ) -> None:
     """Register the /roleall command (stateless, no DB) and its help entry."""
-    from commands.role_all import make_roleall_command, register_help
+    from command_infra.role_all import make_roleall_command, register_help
 
     tree.add_command(make_roleall_command(), guild=guild)
     register_help(registry)
@@ -98,7 +98,7 @@ def _register_clan_stats_commands(
     registry: HelpRegistry,
 ) -> None:
     """Register the /clanstats command (stateless, no DB) and its help entry."""
-    from commands.clan_stats import make_clan_stats_command, register_help
+    from command_infra.clan_stats import make_clan_stats_command, register_help
 
     tree.add_command(make_clan_stats_command(), guild=guild)
     register_help(registry)
