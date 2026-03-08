@@ -79,6 +79,19 @@ def _load_help_command(
     logger.info("Help command registered")
 
 
+def _register_roleall_command(
+    guild: discord.Guild,
+    tree: app_commands.CommandTree,
+    registry: HelpRegistry,
+) -> None:
+    """Register the /roleall command (stateless, no DB) and its help entry."""
+    from commands.role_all import make_roleall_command, register_help
+
+    tree.add_command(make_roleall_command(), guild=guild)
+    register_help(registry)
+    logger.info("Role-all command registered")
+
+
 def _register_clan_stats_commands(
     guild: discord.Guild,
     tree: app_commands.CommandTree,
@@ -105,6 +118,7 @@ async def load_all_services(
         load_temp_vc_service(guild, tree, registry, mongo_uri, db_name, client),
     )
     _register_otw_commands(guild, tree, registry)
+    _register_roleall_command(guild, tree, registry)
     _register_clan_stats_commands(guild, tree, registry)
     _load_help_command(guild, tree, registry)
     return (temp_vc,)
