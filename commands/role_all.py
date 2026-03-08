@@ -2,12 +2,25 @@
 
 from __future__ import annotations
 
+import math
+
 import discord
 from discord import app_commands
 from loguru import logger
 
 from commands.checks import handle_check_failure, is_staff
 from commands.help_registry import HelpEntry, HelpGroup, HelpRegistry
+from core.throttle import Throttle
+
+_ROLE_ASSIGN_RATE = 1.0  # role assignments per second
+
+
+def _format_duration(seconds: int) -> str:
+    """Format a duration in seconds as a human-readable string."""
+    if seconds < 60:
+        return f"{seconds}s"
+    minutes, secs = divmod(seconds, 60)
+    return f"{minutes}m {secs}s" if secs else f"{minutes}m"
 
 
 def _collect_targets(
@@ -34,16 +47,28 @@ async def _assign_role_to_all(
     targets: list[discord.Member],
     role: discord.Role,
 ) -> tuple[int, int]:
-    """Assign role to each target member, returning (succeeded, failed) counts."""
+    """Assign role to each target member via a throttled queue.
+
+    Returns (succeeded, failed) counts.
+    """
     succeeded = 0
     failed = 0
-    for member in targets:
+
+    async def assign(member: discord.Member) -> None:
+        nonlocal succeeded, failed
         try:
             await member.add_roles(role, reason="/roleall command")
             succeeded += 1
         except discord.HTTPException as e:
             logger.warning(f"roleall: failed to assign {role.name} to {member}: {e}")
             failed += 1
+
+    throttle: Throttle[discord.Member] = Throttle(worker=assign, rate=_ROLE_ASSIGN_RATE)
+    throttle.start()
+    for member in targets:
+        await throttle.put(member)
+    await throttle.join()
+    throttle.stop()
     return succeeded, failed
 
 
@@ -93,6 +118,12 @@ def make_roleall_command() -> app_commands.Command:  # type: ignore[type-arg]
                 f"All eligible members already have **{role.name}**."
             )
             return
+
+        eta = _format_duration(math.ceil(len(targets) / _ROLE_ASSIGN_RATE))
+        await interaction.followup.send(
+            f"Assigning **{role.name}** to **{len(targets)}** member(s) "
+            f"— estimated time: **{eta}**."
+        )
 
         succeeded, failed = await _assign_role_to_all(targets, role)
 
