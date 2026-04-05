@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 from typing import TYPE_CHECKING, Any
 
@@ -19,6 +20,8 @@ STREAM_KEY = "foundry:clan_events"
 CONSUMER_GROUP = "discord-utils"
 CONSUMER_NAME = "discord-utils-1"
 BLOCK_MS = 5000
+DEDUP_TTL_SECONDS = 30
+DEDUP_KEY_PREFIX = "foundry:dedup:"
 
 
 class ChatEventsService(Service):
@@ -118,12 +121,26 @@ class ChatEventsService(Service):
                 logger.error("ChatEventsService: consumer error: {}", exc)
                 await asyncio.sleep(2)
 
+    async def _is_duplicate(self, event_type: str, data: dict[str, Any]) -> bool:
+        """Return True if an identical event was dispatched within the dedup window."""
+        dedup_data = {k: v for k, v in data.items() if k != "userkey"}
+        raw = f"{event_type}:{json.dumps(dedup_data, sort_keys=True)}"
+        fingerprint = hashlib.sha256(raw.encode()).hexdigest()
+        key = f"{DEDUP_KEY_PREFIX}{fingerprint}"
+        result = await self._valkey.set(key, "1", nx=True, ex=DEDUP_TTL_SECONDS)
+        return result is None  # None → key already existed → duplicate
+
     async def _handle_message(self, msg_id: bytes, fields: dict[bytes, bytes]) -> None:
         """Dispatch a single stream message, then ACK it."""
         try:
             event_type = fields[b"type"].decode()
             data: dict[str, Any] = json.loads(fields[b"data"])
-            await self._dispatch(event_type, data)
+            if await self._is_duplicate(event_type, data):
+                logger.debug(
+                    "ChatEventsService: duplicate event '{}', skipping", event_type
+                )
+            else:
+                await self._dispatch(event_type, data)
         except Exception as exc:
             logger.error(
                 "ChatEventsService: failed to dispatch msg {}: {}", msg_id, exc
