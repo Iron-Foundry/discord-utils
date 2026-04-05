@@ -34,10 +34,14 @@ class ChatEventsGroup(
         name="setchannel",
         description="Set the channel for all clan events and chat relay",
     )
-    @app_commands.describe(channel="The text channel to post clan events and chat in")
+    @app_commands.describe(
+        channel="The text channel or forum thread to post clan events and chat in"
+    )
     @is_staff()
     async def setchannel(
-        self, interaction: discord.Interaction, channel: discord.TextChannel
+        self,
+        interaction: discord.Interaction,
+        channel: discord.TextChannel | discord.Thread,
     ) -> None:
         logger.debug(
             f"ChatEvents: setchannel invoked by {interaction.user}, "
