@@ -140,8 +140,8 @@ class ChatEventsService(Service):
         if not self._config or not self._config.channel_id:
             return
 
-        channel = self._client.get_channel(self._config.channel_id)
-        if not isinstance(channel, discord.TextChannel | discord.Thread):
+        channel = self._guild.get_channel_or_thread(self._config.channel_id)
+        if not isinstance(channel, (discord.TextChannel, discord.Thread)):
             logger.warning(
                 "ChatEventsService: configured channel {} not found or not a text channel/thread",
                 self._config.channel_id,

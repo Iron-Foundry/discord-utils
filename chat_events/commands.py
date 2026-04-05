@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import discord
 from discord import app_commands
@@ -41,7 +41,7 @@ class ChatEventsGroup(
     async def setchannel(
         self,
         interaction: discord.Interaction,
-        channel: discord.TextChannel | discord.Thread,
+        channel: Union[discord.TextChannel, discord.Thread],
     ) -> None:
         logger.debug(
             f"ChatEvents: setchannel invoked by {interaction.user}, "
