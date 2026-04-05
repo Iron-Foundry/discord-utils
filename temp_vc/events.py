@@ -61,56 +61,6 @@ class TempVCConfigureModal(discord.ui.Modal, title="Configure Your Channel"):
 
 
 # ---------------------------------------------------------------------------
-# GIM role select
-# ---------------------------------------------------------------------------
-
-
-class GIMRoleSelect(discord.ui.Select):
-    """Select menu to choose a GIM team when the member has multiple GIM roles."""
-
-    def __init__(
-        self,
-        service: TempVCService,
-        channel_id: int,
-        gim_roles: list[discord.Role],
-    ) -> None:
-        options = [
-            discord.SelectOption(label=role.name, value=str(role.id))
-            for role in gim_roles
-        ]
-        super().__init__(
-            placeholder="Select your GIM team…",
-            min_values=1,
-            max_values=1,
-            options=options,
-        )
-        self._service = service
-        self._channel_id = channel_id
-        self._role_map = {str(role.id): role.name for role in gim_roles}
-
-    async def callback(self, interaction: discord.Interaction) -> None:
-        role_name = self._role_map[self.values[0]]
-        logger.debug(f"TempVC: GIM role selected — {role_name!r}")
-        await self._service.gim_channel(self._channel_id, role_name)
-        await interaction.response.edit_message(
-            content=f"✅ Channel renamed to **{role_name}**.", view=None
-        )
-
-
-class GIMRoleSelectView(discord.ui.View):
-    def __init__(
-        self,
-        service: TempVCService,
-        channel_id: int,
-        gim_roles: list[discord.Role],
-    ) -> None:
-        super().__init__(timeout=60)
-        self.add_item(
-            GIMRoleSelect(service=service, channel_id=channel_id, gim_roles=gim_roles)
-        )
-
-
-# ---------------------------------------------------------------------------
 # DM view shown after channel creation
 # ---------------------------------------------------------------------------
 
@@ -122,12 +72,28 @@ class TempVCDMView(discord.ui.View):
         self,
         service: TempVCService,
         channel_id: int,
-        gim_roles: list[discord.Role],
+        private: bool = False,
     ) -> None:
         super().__init__(timeout=120)
         self._service = service
         self._channel_id = channel_id
-        self._gim_roles = gim_roles
+        self._private = private
+        self._sync_privacy_button()
+
+    def _sync_privacy_button(self) -> None:
+        """Update the privacy button label and style to match current state."""
+        for item in self.children:
+            if (
+                isinstance(item, discord.ui.Button)
+                and item.custom_id == "toggle_privacy"
+            ):
+                if self._private:
+                    item.label = "🔓 Make Public"
+                    item.style = discord.ButtonStyle.red
+                else:
+                    item.label = "🔒 Make Private"
+                    item.style = discord.ButtonStyle.secondary
+                break
 
     # ------------------------------------------------------------------
     # Auto — keep the channel as-is
@@ -167,35 +133,33 @@ class TempVCDMView(discord.ui.View):
         self.stop()
 
     # ------------------------------------------------------------------
-    # GIM Channel — rename to a GIM role
+    # Privacy toggle — make the channel private or public
     # ------------------------------------------------------------------
 
-    @discord.ui.button(label="GIM Channel", style=discord.ButtonStyle.gray)
-    async def gim_channel(
+    @discord.ui.button(
+        label="🔒 Make Private",
+        style=discord.ButtonStyle.secondary,
+        custom_id="toggle_privacy",
+    )
+    async def toggle_privacy(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ) -> None:
-        if not self._gim_roles:
-            await interaction.response.send_message(
-                "❌ You don't have any configured GIM roles.", ephemeral=True
-            )
-            return
-
-        if len(self._gim_roles) == 1:
-            role_name = self._gim_roles[0].name
-            await self._service.gim_channel(self._channel_id, role_name)
-            await interaction.response.edit_message(
-                content=f"✅ Channel renamed to **{role_name}**.", view=None
-            )
-        else:
-            view = GIMRoleSelectView(
-                service=self._service,
-                channel_id=self._channel_id,
-                gim_roles=self._gim_roles,
-            )
-            await interaction.response.edit_message(
-                content="Select your GIM team:", view=view
-            )
-        self.stop()
+        self._private = not self._private
+        logger.debug(
+            f"TempVC: privacy toggled to {self._private!r} by {interaction.user}"
+        )
+        await self._service.toggle_privacy(
+            interaction.user.id, self._channel_id, self._private
+        )
+        self._sync_privacy_button()
+        status = "private 🔒" if self._private else "public 🔓"
+        await interaction.response.edit_message(
+            content=(
+                f"🎤 **Your voice channel has been created!**\n"
+                f"Channel is now **{status}**. Choose how you'd like to set it up:"
+            ),
+            view=self,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -247,16 +211,21 @@ def register(service: TempVCService, client: DiscordClient) -> None:
         if channel is None:
             return
 
-        gim_roles = service.get_gim_roles(member)
+        user_settings = await service.get_user_settings(member.id)
         logger.debug(
-            f"TempVC: sending DM to {member.display_name}"
-            f" with {len(gim_roles)} GIM role(s)"
+            f"TempVC: sending DM to {member.display_name},"
+            f" private={user_settings.private}"
         )
-        view = TempVCDMView(service=service, channel_id=channel.id, gim_roles=gim_roles)
+        view = TempVCDMView(
+            service=service,
+            channel_id=channel.id,
+            private=user_settings.private,
+        )
+        status = "private 🔒" if user_settings.private else "public 🔓"
         try:
             await member.send(
-                "🎤 **Your voice channel has been created!**\n"
-                "Choose how you'd like to set it up:",
+                f"🎤 **Your voice channel has been created!**\n"
+                f"Channel is **{status}**. Choose how you'd like to set it up:",
                 view=view,
             )
         except discord.Forbidden:

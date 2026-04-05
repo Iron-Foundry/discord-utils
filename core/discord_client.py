@@ -45,6 +45,9 @@ class DiscordClient(discord.Client):
         """Fetch mongo credentials once and load all services in parallel."""
         mongo_uri = self.config.get_variable(ConfigVars.MONGO_URI)
         db_name = self.config.get_variable(ConfigVars.MONGO_DB_NAME) or "foundry"
+        valkey_uri = (
+            self.config.get_variable(ConfigVars.VALKEY_URI) or "redis://localhost:6379"
+        )
 
         if not mongo_uri:
             logger.error("MONGO_URI not set — no services will start")
@@ -58,6 +61,7 @@ class DiscordClient(discord.Client):
             client=self,
             mongo_uri=mongo_uri,
             db_name=db_name,
+            valkey_uri=valkey_uri,
         )
         self.service_handler.register(*services)
         self._services_loaded = True

@@ -6,7 +6,7 @@ import discord
 from loguru import logger
 
 from core.service_base import Service
-from temp_vc.models import TempVCConfig
+from temp_vc.models import TempVCConfig, TempVCUserSettings
 from temp_vc.repository import MongoTempVCRepository
 
 TRIGGER_CHANNEL_NAME = "➕ Create VC"
@@ -122,39 +122,6 @@ class TempVCService(Service):
             logger.error(f"TempVCService: failed to recreate trigger channel: {e}")
 
     # ------------------------------------------------------------------
-    # GIM role management
-    # ------------------------------------------------------------------
-
-    async def add_gim_role(self, role_id: int) -> bool:
-        """Add a GIM role. Returns True if added, False if already present."""
-        assert self._config is not None
-        if role_id in self._config.gim_role_ids:
-            return False
-        self._config.gim_role_ids.append(role_id)
-        await self._repo.save_config(self._config)
-        return True
-
-    async def remove_gim_role(self, role_id: int) -> bool:
-        """Remove a GIM role. Returns True if removed, False if not found."""
-        assert self._config is not None
-        if role_id not in self._config.gim_role_ids:
-            return False
-        self._config.gim_role_ids.remove(role_id)
-        await self._repo.save_config(self._config)
-        return True
-
-    @property
-    def gim_role_ids(self) -> list[int]:
-        """Return the list of configured GIM role IDs."""
-        return list(self._config.gim_role_ids) if self._config else []
-
-    def get_gim_roles(self, member: discord.Member) -> list[discord.Role]:
-        """Return the GIM roles the member has from the configured list."""
-        if self._config is None:
-            return []
-        return [r for r in member.roles if r.id in self._config.gim_role_ids]
-
-    # ------------------------------------------------------------------
     # Channel state helpers
     # ------------------------------------------------------------------
 
@@ -222,6 +189,13 @@ class TempVCService(Service):
         self._config.active_channels[member.id] = channel.id
         await self._repo.save_config(self._config)
 
+        # Apply persisted privacy settings if the user had them configured
+        user_settings = await self.get_user_settings(member.id)
+        if user_settings.private:
+            await self.apply_channel_privacy(
+                channel, member.id, True, user_settings.whitelist
+            )
+
         try:
             await member.move_to(channel, reason="Moving to temp VC")
         except discord.HTTPException as e:
@@ -252,16 +226,6 @@ class TempVCService(Service):
                 f"TempVCService: failed to configure channel {channel_id}: {e}"
             )
 
-    async def gim_channel(self, channel_id: int, role_name: str) -> None:
-        """Rename an existing temp VC to a GIM role name."""
-        channel = self._guild.get_channel(channel_id)
-        if not isinstance(channel, discord.VoiceChannel):
-            return
-        try:
-            await channel.edit(name=role_name)
-        except discord.HTTPException as e:
-            logger.error(f"TempVCService: failed to rename channel {channel_id}: {e}")
-
     async def cleanup_channel(self, channel_id: int) -> None:
         """Delete an empty temp VC and remove it from the active map."""
         assert self._config is not None
@@ -281,3 +245,119 @@ class TempVCService(Service):
             await self._repo.save_config(self._config)
 
         logger.info(f"TempVCService: cleaned up channel {channel_id}")
+
+    # ------------------------------------------------------------------
+    # User settings (privacy + whitelist)
+    # ------------------------------------------------------------------
+
+    async def get_user_settings(self, member_id: int) -> TempVCUserSettings:
+        """Return persisted user settings, creating defaults if missing."""
+        settings = await self._repo.get_user_settings(member_id, self._guild.id)
+        if settings is None:
+            settings = TempVCUserSettings(user_id=member_id, guild_id=self._guild.id)
+        return settings
+
+    async def save_user_settings(self, settings: TempVCUserSettings) -> None:
+        """Persist user settings."""
+        await self._repo.save_user_settings(settings)
+
+    async def apply_channel_privacy(
+        self,
+        channel: discord.VoiceChannel,
+        owner_id: int,
+        private: bool,
+        whitelist: list[int],
+    ) -> None:
+        """Apply or remove privacy overrides on a temp VC."""
+        owner = self._guild.get_member(owner_id)
+        if private:
+            try:
+                await channel.set_permissions(self._guild.default_role, connect=False)
+                if owner:
+                    await channel.set_permissions(owner, connect=True)
+                for member_id in whitelist:
+                    member = self._guild.get_member(member_id)
+                    if member:
+                        await channel.set_permissions(member, connect=True)
+            except discord.HTTPException as e:
+                logger.error(
+                    f"TempVCService: failed to apply privacy to {channel.id}: {e}"
+                )
+        else:
+            try:
+                await channel.set_permissions(self._guild.default_role, overwrite=None)
+                if owner:
+                    await channel.set_permissions(owner, overwrite=None)
+                for member_id in whitelist:
+                    member = self._guild.get_member(member_id)
+                    if member:
+                        await channel.set_permissions(member, overwrite=None)
+            except discord.HTTPException as e:
+                logger.error(
+                    f"TempVCService: failed to remove privacy from {channel.id}: {e}"
+                )
+
+    async def toggle_privacy(
+        self, user_id: int, channel_id: int, private: bool
+    ) -> None:
+        """Toggle privacy on a temp VC and persist the setting."""
+        settings = await self.get_user_settings(user_id)
+        settings.private = private
+        await self.save_user_settings(settings)
+
+        channel = self._guild.get_channel(channel_id)
+        if not isinstance(channel, discord.VoiceChannel):
+            return
+        await self.apply_channel_privacy(channel, user_id, private, settings.whitelist)
+
+    async def add_to_whitelist(self, owner_id: int, target_id: int) -> bool:
+        """Add a member to the owner's whitelist. Returns True if added."""
+        settings = await self.get_user_settings(owner_id)
+        if target_id in settings.whitelist:
+            return False
+        settings.whitelist.append(target_id)
+        await self.save_user_settings(settings)
+
+        # Immediately grant connect if owner has an active private channel
+        channel_id = self.get_active_channel_id(owner_id)
+        if channel_id and settings.private:
+            channel = self._guild.get_channel(channel_id)
+            if isinstance(channel, discord.VoiceChannel):
+                member = self._guild.get_member(target_id)
+                if member:
+                    try:
+                        await channel.set_permissions(member, connect=True)
+                    except discord.HTTPException as e:
+                        logger.error(
+                            f"TempVCService: failed to grant connect to {target_id}: {e}"
+                        )
+        return True
+
+    async def remove_from_whitelist(self, owner_id: int, target_id: int) -> bool:
+        """Remove a member from the owner's whitelist. Returns True if removed."""
+        settings = await self.get_user_settings(owner_id)
+        if target_id not in settings.whitelist:
+            return False
+        settings.whitelist.remove(target_id)
+        await self.save_user_settings(settings)
+
+        # Immediately revoke connect if owner has an active private channel
+        channel_id = self.get_active_channel_id(owner_id)
+        if channel_id and settings.private:
+            channel = self._guild.get_channel(channel_id)
+            if isinstance(channel, discord.VoiceChannel):
+                member = self._guild.get_member(target_id)
+                if member:
+                    try:
+                        await channel.set_permissions(member, overwrite=None)
+                    except discord.HTTPException as e:
+                        logger.error(
+                            f"TempVCService: failed to revoke connect from"
+                            f" {target_id}: {e}"
+                        )
+        return True
+
+    async def get_whitelist(self, owner_id: int) -> list[int]:
+        """Return the whitelist for a member."""
+        settings = await self.get_user_settings(owner_id)
+        return list(settings.whitelist)

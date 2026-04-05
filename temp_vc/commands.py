@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 from loguru import logger
 
-from command_infra.checks import handle_check_failure, is_senior_staff, is_staff
+from command_infra.checks import handle_check_failure, is_senior_staff
 from command_infra.help_registry import HelpEntry, HelpGroup, HelpRegistry
 
 if TYPE_CHECKING:
@@ -26,19 +26,19 @@ def register_help(registry: HelpRegistry) -> None:
                     "Senior Staff",
                 ),
                 HelpEntry(
-                    "/tempvc gim add <role>",
-                    "Add a role as a GIM group (members share a temp VC)",
-                    "Senior Staff",
+                    "/tempvc whitelist add <member>",
+                    "Add a member to your temp VC whitelist",
+                    "Member",
                 ),
                 HelpEntry(
-                    "/tempvc gim remove <role>",
-                    "Remove a role from GIM groups",
-                    "Senior Staff",
+                    "/tempvc whitelist remove <member>",
+                    "Remove a member from your temp VC whitelist",
+                    "Member",
                 ),
                 HelpEntry(
-                    "/tempvc gim list",
-                    "List all configured GIM group roles",
-                    "Staff",
+                    "/tempvc whitelist list",
+                    "Show your temp VC whitelist",
+                    "Member",
                 ),
             ],
         )
@@ -46,12 +46,14 @@ def register_help(registry: HelpRegistry) -> None:
 
 
 # ---------------------------------------------------------------------------
-# GIM subgroup
+# Whitelist subgroup
 # ---------------------------------------------------------------------------
 
 
-class GIMGroup(app_commands.Group, name="gim", description="Manage GIM group roles"):
-    """Subgroup for configuring which roles count as GIM groups."""
+class WhitelistGroup(
+    app_commands.Group, name="whitelist", description="Manage your temp VC whitelist"
+):
+    """Subgroup for managing the per-user whitelist for private temp VCs."""
 
     def __init__(self, service: TempVCService) -> None:
         super().__init__()
@@ -63,63 +65,75 @@ class GIMGroup(app_commands.Group, name="gim", description="Manage GIM group rol
         await handle_check_failure(interaction, error)
 
     # ------------------------------------------------------------------
-    # /tempvc gim add <role>
+    # /tempvc whitelist add <member>
     # ------------------------------------------------------------------
 
-    @app_commands.command(name="add", description="Add a role as a GIM group")
-    @app_commands.describe(role="The role to add as a GIM group")
-    @is_senior_staff()
-    async def add(self, interaction: discord.Interaction, role: discord.Role) -> None:
-        logger.debug(
-            f"TempVC: gim add invoked by {interaction.user}, role={role.name!r}"
-        )
-        added = await self._service.add_gim_role(role.id)
-        if added:
-            await interaction.response.send_message(
-                f"✅ {role.mention} added as a GIM group.", ephemeral=True
-            )
-        else:
-            await interaction.response.send_message(
-                f"{role.mention} is already a GIM group.", ephemeral=True
-            )
-
-    # ------------------------------------------------------------------
-    # /tempvc gim remove <role>
-    # ------------------------------------------------------------------
-
-    @app_commands.command(name="remove", description="Remove a role from GIM groups")
-    @app_commands.describe(role="The role to remove")
-    @is_senior_staff()
-    async def remove(
-        self, interaction: discord.Interaction, role: discord.Role
+    @app_commands.command(name="add", description="Add a member to your whitelist")
+    @app_commands.describe(member="The member to allow into your private temp VC")
+    async def add(
+        self, interaction: discord.Interaction, member: discord.Member
     ) -> None:
         logger.debug(
-            f"TempVC: gim remove invoked by {interaction.user}, role={role.name!r}"
+            f"TempVC: whitelist add invoked by {interaction.user},"
+            f" target={member.display_name!r}"
         )
-        removed = await self._service.remove_gim_role(role.id)
+        if member.id == interaction.user.id:
+            await interaction.response.send_message(
+                "❌ You can't whitelist yourself.", ephemeral=True
+            )
+            return
+        added = await self._service.add_to_whitelist(interaction.user.id, member.id)
+        if added:
+            await interaction.response.send_message(
+                f"✅ {member.mention} added to your whitelist.", ephemeral=True
+            )
+        else:
+            await interaction.response.send_message(
+                f"{member.mention} is already on your whitelist.", ephemeral=True
+            )
+
+    # ------------------------------------------------------------------
+    # /tempvc whitelist remove <member>
+    # ------------------------------------------------------------------
+
+    @app_commands.command(
+        name="remove", description="Remove a member from your whitelist"
+    )
+    @app_commands.describe(member="The member to remove from your whitelist")
+    async def remove(
+        self, interaction: discord.Interaction, member: discord.Member
+    ) -> None:
+        logger.debug(
+            f"TempVC: whitelist remove invoked by {interaction.user},"
+            f" target={member.display_name!r}"
+        )
+        removed = await self._service.remove_from_whitelist(
+            interaction.user.id, member.id
+        )
         if removed:
             await interaction.response.send_message(
-                f"⛔ {role.mention} removed from GIM groups.", ephemeral=True
+                f"⛔ {member.mention} removed from your whitelist.", ephemeral=True
             )
         else:
             await interaction.response.send_message(
-                f"{role.mention} was not a GIM group.", ephemeral=True
+                f"{member.mention} was not on your whitelist.", ephemeral=True
             )
 
     # ------------------------------------------------------------------
-    # /tempvc gim list
+    # /tempvc whitelist list
     # ------------------------------------------------------------------
 
-    @app_commands.command(name="list", description="List all GIM group roles")
-    @is_staff()
-    async def list_gim(self, interaction: discord.Interaction) -> None:
-        logger.debug(f"TempVC: gim list invoked by {interaction.user}")
-        role_ids = self._service.gim_role_ids
-        embed = discord.Embed(title="GIM Group Roles", color=discord.Color.blurple())
-        if not role_ids:
-            embed.description = "No GIM group roles configured."
+    @app_commands.command(name="list", description="Show your temp VC whitelist")
+    async def list_whitelist(self, interaction: discord.Interaction) -> None:
+        logger.debug(f"TempVC: whitelist list invoked by {interaction.user}")
+        whitelist = await self._service.get_whitelist(interaction.user.id)
+        embed = discord.Embed(
+            title="Your Temp VC Whitelist", color=discord.Color.blurple()
+        )
+        if not whitelist:
+            embed.description = "Your whitelist is empty."
         else:
-            embed.description = "\n".join(f"<@&{rid}>" for rid in role_ids)
+            embed.description = "\n".join(f"<@{uid}>" for uid in whitelist)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
@@ -134,7 +148,7 @@ class TempVCGroup(app_commands.Group, name="tempvc", description="Temp VC manage
     def __init__(self, service: TempVCService) -> None:
         super().__init__()
         self._service = service
-        self.add_command(GIMGroup(service=service))
+        self.add_command(WhitelistGroup(service=service))
 
     async def on_error(
         self, interaction: discord.Interaction, error: app_commands.AppCommandError

@@ -13,4 +13,5 @@ dependencies = [
     "pydantic>=2.12.3",
     "pymongo>=4.15.3",
     "python-dotenv>=1.2.2",
+    "valkey>=6.1.1",
 ]

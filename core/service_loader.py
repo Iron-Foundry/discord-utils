@@ -12,6 +12,7 @@ from loguru import logger
 from command_infra.help_registry import HelpRegistry
 
 if TYPE_CHECKING:
+    from chat_events.service import ChatEventsService
     from core.discord_client import DiscordClient
     from temp_vc.service import TempVCService
 
@@ -105,6 +106,31 @@ def _register_clan_stats_commands(
     logger.info("Clan stats command registered")
 
 
+async def load_chat_events_service(
+    guild: discord.Guild,
+    tree: app_commands.CommandTree,
+    mongo_uri: str,
+    db_name: str,
+    valkey_uri: str,
+    client: DiscordClient,
+) -> ChatEventsService:
+    """Initialise the chat events service and register its slash commands."""
+    from valkey.asyncio import Valkey
+
+    from chat_events.commands import ChatEventsGroup
+    from chat_events.repository import MongoChatEventsRepository
+    from chat_events.service import ChatEventsService
+
+    repo = MongoChatEventsRepository(mongo_uri=mongo_uri, db_name=db_name)
+    valkey = Valkey.from_url(valkey_uri)
+    service = ChatEventsService(guild=guild, repo=repo, valkey=valkey, client=client)
+    await service.initialize()
+
+    tree.add_command(ChatEventsGroup(service=service), guild=guild)
+    logger.info("Chat events service initialised and commands registered")
+    return service
+
+
 async def load_all_services(
     guild: discord.Guild,
     tree: app_commands.CommandTree,
@@ -112,13 +138,15 @@ async def load_all_services(
     client: DiscordClient,
     mongo_uri: str,
     db_name: str,
-) -> tuple[TempVCService]:
+    valkey_uri: str,
+) -> tuple[TempVCService, ChatEventsService]:
     """Load all services in parallel, then register stateless commands and /help."""
-    (temp_vc,) = await asyncio.gather(
+    temp_vc, clan_events = await asyncio.gather(
         load_temp_vc_service(guild, tree, registry, mongo_uri, db_name, client),
+        load_chat_events_service(guild, tree, mongo_uri, db_name, valkey_uri, client),
     )
     _register_otw_commands(guild, tree, registry)
     _register_roleall_command(guild, tree, registry)
     _register_clan_stats_commands(guild, tree, registry)
     _load_help_command(guild, tree, registry)
-    return (temp_vc,)
+    return (temp_vc, clan_events)
