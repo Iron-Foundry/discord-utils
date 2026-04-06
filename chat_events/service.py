@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import re
 from typing import TYPE_CHECKING, Any
 
 import discord
@@ -15,6 +16,8 @@ from core.service_base import Service
 
 if TYPE_CHECKING:
     pass
+
+_IMG_TAG_RE = re.compile(r"<img=\d+>\s*")
 
 STREAM_KEY = "foundry:clan_events"
 CONSUMER_GROUP = "discord-utils"
@@ -173,6 +176,11 @@ class ChatEventsService(Service):
             if embed:
                 await channel.send(embed=embed)
 
+    @staticmethod
+    def _clean(value: str) -> str:
+        """Strip OSRS image tags (e.g. ``<img=2>``) from a string."""
+        return _IMG_TAG_RE.sub("", value).strip()
+
     def _build_embed(
         self, event_type: str, data: dict[str, Any]
     ) -> discord.Embed | None:
@@ -186,7 +194,11 @@ class ChatEventsService(Service):
         }
         builder = builders.get(event_type)
         if builder is None:
-            logger.debug("ChatEventsService: unknown event type '{}'", event_type)
+            logger.warning(
+                "ChatEventsService: unhandled event type '{}', data={}",
+                event_type,
+                data,
+            )
             return None
         return builder(data)
 
@@ -195,10 +207,10 @@ class ChatEventsService(Service):
     # ------------------------------------------------------------------
 
     def _loot_embed(self, data: dict[str, Any]) -> discord.Embed:
-        player = data.get("player_name", "Unknown")
-        item = data.get("item_name", "Unknown item")
+        player = self._clean(data.get("player_name", "Unknown"))
+        item = self._clean(data.get("item_name", "Unknown item"))
         gp = data.get("coin_value", 0)
-        source = data.get("source", "Unknown source")
+        source = self._clean(data.get("source", "Unknown source"))
         embed = discord.Embed(
             description=f"**{player}** received **{item}** ({gp:,} gp) from **{source}**",
             color=discord.Color.gold(),
@@ -207,8 +219,8 @@ class ChatEventsService(Service):
         return embed
 
     def _levelup_embed(self, data: dict[str, Any]) -> discord.Embed:
-        player = data.get("player_name", "Unknown")
-        skill = data.get("skill", "Unknown skill")
+        player = self._clean(data.get("player_name", "Unknown"))
+        skill = self._clean(data.get("skill", "Unknown skill"))
         level = data.get("new_level", "?")
         embed = discord.Embed(
             description=f"**{player}** reached level **{level} {skill}**",
@@ -218,8 +230,8 @@ class ChatEventsService(Service):
         return embed
 
     def _achievement_embed(self, data: dict[str, Any]) -> discord.Embed:
-        player = data.get("player_name", "Unknown")
-        name = data.get("name", "Unknown achievement")
+        player = self._clean(data.get("player_name", "Unknown"))
+        name = self._clean(data.get("name", "Unknown achievement"))
         embed = discord.Embed(
             description=f"**{player}** completed **{name}**",
             color=discord.Color.purple(),
@@ -228,7 +240,7 @@ class ChatEventsService(Service):
         return embed
 
     def _pet_embed(self, data: dict[str, Any]) -> discord.Embed:
-        player = data.get("player_name", "Unknown")
+        player = self._clean(data.get("player_name", "Unknown"))
         embed = discord.Embed(
             description=f"**{player}** received a pet!",
             color=discord.Color.green(),
@@ -237,7 +249,7 @@ class ChatEventsService(Service):
         return embed
 
     def _new_member_embed(self, data: dict[str, Any]) -> discord.Embed:
-        player = data.get("player_name", "Unknown")
+        player = self._clean(data.get("player_name", "Unknown"))
         embed = discord.Embed(
             description=f"**{player}** has joined the clan",
             color=discord.Color.teal(),
@@ -250,9 +262,6 @@ class ChatEventsService(Service):
     # ------------------------------------------------------------------
 
     def _chat_message(self, data: dict[str, Any]) -> str:
-        rank = data.get("rank", "")
-        player = data.get("player_name", data.get("sender", "Unknown"))
+        player = self._clean(data.get("player_name", data.get("sender", "Unknown")))
         message = data.get("raw_message", "")
-        if rank:
-            return f"[{rank}] {player}: {message}"
         return f"{player}: {message}"
