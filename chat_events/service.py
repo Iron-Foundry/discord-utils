@@ -191,6 +191,16 @@ class ChatEventsService(Service):
             "achievement": self._achievement_embed,
             "pet": self._pet_embed,
             "new_member": self._new_member_embed,
+            "xpmilestone": self._xpmilestone_embed,
+            "collection_log": self._collection_log_embed,
+            "loot_key": self._loot_key_embed,
+            "clue_item": self._clue_item_embed,
+            "pk": self._pk_embed,
+            "personal_best": self._personal_best_embed,
+            "left_clan": self._left_clan_embed,
+            "expelled": self._expelled_embed,
+            "coffer_donation": self._coffer_donation_embed,
+            "coffer_withdrawal": self._coffer_withdrawal_embed,
         }
         builder = builders.get(event_type)
         if builder is None:
@@ -206,13 +216,24 @@ class ChatEventsService(Service):
     # Embed builders
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _format_time(seconds: float) -> str:
+        """Convert a duration in seconds to M:SS or H:MM:SS."""
+        total = int(seconds)
+        h, remainder = divmod(total, 3600)
+        m, s = divmod(remainder, 60)
+        if h:
+            return f"{h}:{m:02}:{s:02}"
+        return f"{m}:{s:02}"
+
     def _loot_embed(self, data: dict[str, Any]) -> discord.Embed:
         player = self._clean(data.get("player_name", "Unknown"))
         item = self._clean(data.get("item_name", "Unknown item"))
-        gp = data.get("coin_value", 0)
+        gp: int | None = data.get("coin_value")
         source = self._clean(data.get("source", "Unknown source"))
+        gp_clause = f" ({gp:,} gp)" if gp is not None else ""
         embed = discord.Embed(
-            description=f"**{player}** received **{item}** ({gp:,} gp) from **{source}**",
+            description=f"**{player}** received **{item}**{gp_clause} from **{source}**",
             color=discord.Color.gold(),
         )
         embed.set_author(name="Loot Drop")
@@ -255,6 +276,122 @@ class ChatEventsService(Service):
             color=discord.Color.teal(),
         )
         embed.set_author(name="New Member")
+        return embed
+
+    def _xpmilestone_embed(self, data: dict[str, Any]) -> discord.Embed:
+        player = self._clean(data.get("player_name", "Unknown"))
+        skill = self._clean(data.get("skill", "Unknown skill"))
+        xp: int = data.get("xp", 0)
+        embed = discord.Embed(
+            description=f"**{player}** reached **{xp:,} XP** in **{skill}**",
+            color=discord.Color.blue(),
+        )
+        embed.set_author(name="XP Milestone")
+        return embed
+
+    def _collection_log_embed(self, data: dict[str, Any]) -> discord.Embed:
+        player = self._clean(data.get("player_name", "Unknown"))
+        item = self._clean(data.get("item_name", "Unknown item"))
+        slots: int = data.get("log_slots", 0)
+        embed = discord.Embed(
+            description=(
+                f"**{player}** added **{item}** to their collection log"
+                f" (slot **{slots}**)"
+            ),
+            color=discord.Color.og_blurple(),
+        )
+        embed.set_author(name="Collection Log")
+        return embed
+
+    def _loot_key_embed(self, data: dict[str, Any]) -> discord.Embed:
+        player = self._clean(data.get("player_name", "Unknown"))
+        gp: int = data.get("coin_value", 0)
+        embed = discord.Embed(
+            description=f"**{player}** opened a loot key worth **{gp:,} gp**",
+            color=discord.Color.gold(),
+        )
+        embed.set_author(name="Loot Key")
+        return embed
+
+    def _clue_item_embed(self, data: dict[str, Any]) -> discord.Embed:
+        player = self._clean(data.get("player_name", "Unknown"))
+        item = self._clean(data.get("item_name", "Unknown item"))
+        gp: int | None = data.get("coin_value")
+        gp_clause = f" ({gp:,} gp)" if gp is not None else ""
+        embed = discord.Embed(
+            description=(
+                f"**{player}** received **{item}** from a clue scroll{gp_clause}"
+            ),
+            color=discord.Color.gold(),
+        )
+        embed.set_author(name="Clue Scroll Reward")
+        return embed
+
+    def _pk_embed(self, data: dict[str, Any]) -> discord.Embed:
+        winner = self._clean(data.get("winner", "Unknown"))
+        loser = self._clean(data.get("loser", "Unknown"))
+        gp: int | None = data.get("gp_exchanged")
+        gp_clause = f" and looted **{gp:,} gp**" if gp is not None else ""
+        embed = discord.Embed(
+            description=f"**{winner}** defeated **{loser}**{gp_clause}",
+            color=discord.Color.red(),
+        )
+        embed.set_author(name="PK")
+        return embed
+
+    def _personal_best_embed(self, data: dict[str, Any]) -> discord.Embed:
+        player = self._clean(data.get("player_name", "Unknown"))
+        activity = self._clean(data.get("activity", "Unknown activity"))
+        time_seconds: float = data.get("time_seconds", 0.0)
+        variant: str | None = data.get("variant")
+        activity_label = f"{activity} ({variant})" if variant else activity
+        embed = discord.Embed(
+            description=(
+                f"**{player}** set a new **{activity_label}** PB:"
+                f" **{self._format_time(time_seconds)}**"
+            ),
+            color=discord.Color.green(),
+        )
+        embed.set_author(name="Personal Best")
+        return embed
+
+    def _left_clan_embed(self, data: dict[str, Any]) -> discord.Embed:
+        player = self._clean(data.get("player_name", "Unknown"))
+        embed = discord.Embed(
+            description=f"**{player}** has left the clan",
+            color=discord.Color.light_grey(),
+        )
+        embed.set_author(name="Member Left")
+        return embed
+
+    def _expelled_embed(self, data: dict[str, Any]) -> discord.Embed:
+        player = self._clean(data.get("player_name", "Unknown"))
+        expelled_by = self._clean(data.get("expelled_by", "Unknown"))
+        embed = discord.Embed(
+            description=f"**{player}** was expelled from the clan by **{expelled_by}**",
+            color=discord.Color.dark_red(),
+        )
+        embed.set_author(name="Member Expelled")
+        return embed
+
+    def _coffer_donation_embed(self, data: dict[str, Any]) -> discord.Embed:
+        player = self._clean(data.get("player_name", "Unknown"))
+        amount: int = data.get("amount", 0)
+        embed = discord.Embed(
+            description=f"**{player}** deposited **{amount:,} gp** into the coffer",
+            color=discord.Color.teal(),
+        )
+        embed.set_author(name="Coffer Donation")
+        return embed
+
+    def _coffer_withdrawal_embed(self, data: dict[str, Any]) -> discord.Embed:
+        player = self._clean(data.get("player_name", "Unknown"))
+        amount: int = data.get("amount", 0)
+        embed = discord.Embed(
+            description=f"**{player}** withdrew **{amount:,} gp** from the coffer",
+            color=discord.Color.orange(),
+        )
+        embed.set_author(name="Coffer Withdrawal")
         return embed
 
     # ------------------------------------------------------------------
