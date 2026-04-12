@@ -26,9 +26,10 @@ def register(service: ChatEventsService, client: DiscordClient) -> None:
         )
         if not service.channel_id or message.channel.id != service.channel_id:
             return
+        content = message.content if message.content else "Posted an image"
         payload = json.dumps({
             "sender": message.author.display_name,
-            "message": message.content,
+            "message": content,
             "guild_name": message.guild.name if message.guild else "",
         })
         logger.info(
