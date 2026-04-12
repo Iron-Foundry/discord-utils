@@ -37,8 +37,8 @@ def register(service: ChatEventsService, client: DiscordClient) -> None:
             message.guild.name if message.guild else "?",
         )
         try:
-            await service._valkey.publish(DISCORD_CHAT_CHANNEL, payload)
-            logger.debug("ChatEvents: publish OK")
+            receivers = await service._valkey.publish(DISCORD_CHAT_CHANNEL, payload)
+            logger.info("ChatEvents: publish OK, {} subscriber(s) received", receivers)
         except Exception as exc:
             logger.warning("ChatEvents: failed to publish discord message: {}", exc)
 
