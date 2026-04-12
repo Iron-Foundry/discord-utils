@@ -213,8 +213,10 @@ class ChatEventsService(Service):
                 await channel.send(embed=embed)
 
     @staticmethod
-    def _clean(value: str) -> str:
+    def _clean(value: str | None) -> str:
         """Strip OSRS image tags (e.g. ``<img=2>``) from a string."""
+        if not value:
+            return ""
         return _IMG_TAG_RE.sub("", value).strip()
 
     @staticmethod
@@ -222,7 +224,7 @@ class ChatEventsService(Service):
         """Return True if the event originated from a Leagues world."""
         if data.get("is_league_world"):
             return True
-        raw: str = data.get("raw_message", "")
+        raw: str = data.get("raw_message") or ""
         return bool(_LEAGUES_IMG_TAG_RE.search(raw))
 
     def _build_embed(
