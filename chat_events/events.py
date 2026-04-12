@@ -19,6 +19,11 @@ def register(service: ChatEventsService, client: DiscordClient) -> None:
     async def on_message(message: discord.Message) -> None:
         if message.author.bot:
             return
+        logger.debug(
+            "ChatEvents: on_message channel={} configured={}",
+            message.channel.id,
+            service.channel_id,
+        )
         if not service.channel_id or message.channel.id != service.channel_id:
             return
         payload = json.dumps({
@@ -26,8 +31,14 @@ def register(service: ChatEventsService, client: DiscordClient) -> None:
             "message": message.content,
             "guild_name": message.guild.name if message.guild else "",
         })
+        logger.info(
+            "ChatEvents: publishing to Valkey sender={} guild={}",
+            message.author.display_name,
+            message.guild.name if message.guild else "?",
+        )
         try:
             await service._valkey.publish(DISCORD_CHAT_CHANNEL, payload)
+            logger.debug("ChatEvents: publish OK")
         except Exception as exc:
             logger.warning("ChatEvents: failed to publish discord message: {}", exc)
 
