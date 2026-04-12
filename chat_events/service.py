@@ -245,6 +245,7 @@ class ChatEventsService(Service):
             "expelled": self._expelled_embed,
             "coffer_donation": self._coffer_donation_embed,
             "coffer_withdrawal": self._coffer_withdrawal_embed,
+            "hcim_death": self._hcim_death_embed,
         }
         builder = builders.get(event_type)
         if builder is None:
@@ -307,7 +308,7 @@ class ChatEventsService(Service):
             color=discord.Color.purple(),
         )
         embed.set_author(name="Achievement Unlocked")
-        embed.set_thumbnail(url=_wiki_quest_scroll_url(name))
+        embed.set_image(url=_wiki_quest_scroll_url(name))
         return embed
 
     def _pet_embed(self, data: dict[str, Any]) -> discord.Embed:
@@ -352,14 +353,13 @@ class ChatEventsService(Service):
         player = self._clean(data.get("player_name", "Unknown"))
         item = self._clean(data.get("item_name", "Unknown item"))
         slots: int = data.get("log_slots", 0)
+        slots_max: int = data.get("log_slots_max", 0)
         embed = discord.Embed(
-            description=(
-                f"**{player}** added **{item}** to their collection log"
-                f" (slot **{slots}**)"
-            ),
+            description=f"**{player}** added **{item}** to their collection log",
             color=discord.Color.og_blurple(),
         )
         embed.set_author(name="Collection Log")
+        embed.set_footer(text=f"{slots}/{slots_max}")
         embed.set_thumbnail(url=_wiki_item_url(item))
         return embed
 
@@ -460,6 +460,20 @@ class ChatEventsService(Service):
             color=discord.Color.orange(),
         )
         embed.set_author(name="Coffer Withdrawal")
+        return embed
+
+    def _hcim_death_embed(self, data: dict[str, Any]) -> discord.Embed:
+        player = self._clean(data.get("player_name", "Unknown"))
+        embed = discord.Embed(
+            description=(
+                f"**{player}** has died and lost their Hardcore Ironman status"
+            ),
+            color=discord.Color.dark_red(),
+        )
+        embed.set_author(name="Hardcore Ironman Death")
+        embed.set_thumbnail(
+            url=f"{_WIKI_BASE}/Hardcore_ironman_chat_badge.png"
+        )
         return embed
 
     # ------------------------------------------------------------------

@@ -118,6 +118,7 @@ async def load_chat_events_service(
     from valkey.asyncio import Valkey
 
     from chat_events.commands import ChatEventsGroup
+    from chat_events.events import register as register_chat_events_events
     from chat_events.repository import MongoChatEventsRepository
     from chat_events.service import ChatEventsService
 
@@ -126,6 +127,7 @@ async def load_chat_events_service(
     service = ChatEventsService(guild=guild, repo=repo, valkey=valkey, client=client)
     await service.initialize()
 
+    register_chat_events_events(service, client)
     tree.add_command(ChatEventsGroup(service=service), guild=guild)
     logger.info("Chat events service initialised and commands registered")
     return service
