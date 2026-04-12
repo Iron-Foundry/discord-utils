@@ -31,16 +31,20 @@ class MongoChatEventsRepository:
             )
             return None
 
-    async def get_rsn(self, discord_user_id: int) -> str | None:
-        """Return the linked RSN for a Discord user, or None if not set."""
+    async def get_sender_info(
+        self, discord_user_id: int
+    ) -> tuple[str, str | None] | None:
+        """Return (rsn, clan_rank) for a Discord user, or None if no profile / RSN."""
         try:
             doc = await self._db["users"].find_one(
                 {"discord_user_id": discord_user_id, "rsn": {"$ne": None}},
-                {"rsn": 1, "_id": 0},
+                {"rsn": 1, "clan_rank": 1, "_id": 0},
             )
-            return doc["rsn"] if doc else None
+            if not doc:
+                return None
+            return doc["rsn"], doc.get("clan_rank")
         except PyMongoError as e:
-            logger.error(f"Failed to fetch RSN for user {discord_user_id}: {e}")
+            logger.error(f"Failed to fetch sender info for user {discord_user_id}: {e}")
             return None
 
     async def save_config(self, config: ClanEventsConfig) -> None:

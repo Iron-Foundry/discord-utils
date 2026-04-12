@@ -147,12 +147,19 @@ class ChatEventsService(Service):
     # Config management
     # ------------------------------------------------------------------
 
-    async def resolve_sender(self, user: discord.Member | discord.User) -> str:
-        """Return the user's linked RSN, or fall back to their display name."""
-        rsn = await self._repo.get_rsn(user.id)
-        if rsn:
-            return rsn
-        return user.display_name if isinstance(user, discord.Member) else user.name
+    async def resolve_sender(
+        self, user: discord.Member | discord.User
+    ) -> tuple[str, str | None]:
+        """Return (sender_name, clan_rank).
+
+        sender_name is the linked RSN when available, otherwise the Discord
+        display name. clan_rank is None when no profile or rank is stored.
+        """
+        info = await self._repo.get_sender_info(user.id)
+        if info:
+            return info
+        fallback = user.display_name if isinstance(user, discord.Member) else user.name
+        return fallback, None
 
     async def set_channel(self, channel_id: int) -> None:
         """Persist the configured Discord channel."""

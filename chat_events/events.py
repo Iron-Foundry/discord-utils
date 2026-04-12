@@ -27,15 +27,17 @@ def register(service: ChatEventsService, client: DiscordClient) -> None:
         if not service.channel_id or message.channel.id != service.channel_id:
             return
         content = message.content if message.content else "Posted an image"
-        sender = await service.resolve_sender(message.author)
+        sender, rank = await service.resolve_sender(message.author)
         payload = json.dumps({
             "sender": sender,
+            "rank": rank,
             "message": content,
             "guild_name": message.guild.name if message.guild else "",
         })
         logger.info(
-            "ChatEvents: publishing to Valkey sender={} guild={}",
+            "ChatEvents: publishing to Valkey sender={} rank={} guild={}",
             sender,
+            rank,
             message.guild.name if message.guild else "?",
         )
         try:
