@@ -26,9 +26,14 @@ _LEAGUES_ICON_URL = f"{_WIKI_BASE}/Leagues_icon.png"
 
 # ANSI escape codes for Discord ```ansi``` code blocks
 _ANSI_RESET = "\u001b[0m"
-_ANSI_TEAL = "\u001b[1;36m"
-_ANSI_LIGHT_BLUE = "\u001b[1;34m"
-_CHAT_COLORS = (_ANSI_TEAL, _ANSI_LIGHT_BLUE)
+_CHAT_COLORS = (
+    "\u001b[1;31m",  # red
+    "\u001b[1;32m",  # green
+    "\u001b[1;33m",  # gold
+    "\u001b[1;34m",  # light blue
+    "\u001b[1;35m",  # pink
+    "\u001b[1;36m",  # teal
+)
 
 
 def _wiki_name(name: str) -> str:
@@ -68,14 +73,17 @@ class ChatEventsService(Service):
         guild: discord.Guild,
         repo: MongoChatEventsRepository,
         valkey: Valkey,
+        valkey_uri: str,
         client: discord.Client,
     ) -> None:
         self._guild = guild
         self._repo = repo
         self._valkey = valkey
+        self._valkey_uri = valkey_uri
         self._client = client
         self._config: ClanEventsConfig | None = None
         self._consumer_task: asyncio.Task[None] | None = None
+        self._presence_task: asyncio.Task[None] | None = None
         self._chat_color_index: int = 0
 
     async def initialize(self) -> None:
@@ -92,7 +100,48 @@ class ChatEventsService(Service):
         self._consumer_task = asyncio.create_task(
             self._consume(), name="clan-events-consumer"
         )
+        self._presence_task = asyncio.create_task(
+            self._presence_subscriber(), name="ws-presence-subscriber"
+        )
         logger.info("ChatEventsService: consumer task started")
+
+    async def _presence_subscriber(self) -> None:
+        """Subscribe to WS presence events and post connect/disconnect notices."""
+        while True:
+            sub = Valkey.from_url(self._valkey_uri, socket_timeout=None)
+            try:
+                async with sub.pubsub() as ps:
+                    await ps.subscribe("foundry:ws_presence")
+                    logger.info("ChatEventsService: subscribed to foundry:ws_presence")
+                    async for raw in ps.listen():
+                        if raw["type"] != "message":
+                            continue
+                        try:
+                            data = json.loads(raw["data"])
+                            channel_id = self.channel_id
+                            if not channel_id:
+                                continue
+                            channel = self._client.get_channel(channel_id)
+                            if not isinstance(channel, (discord.TextChannel, discord.Thread)):
+                                continue
+                            event = data.get("event")
+                            user_id: int = data["discord_user_id"]
+                            verb = "connected to" if event == "connect" else "disconnected from"
+                            await channel.send(
+                                f"<@{user_id}> {verb} the in-game clan chat.",
+                                allowed_mentions=discord.AllowedMentions(users=False),
+                            )
+                        except Exception as exc:
+                            logger.warning("ChatEventsService: presence handler error: {}", exc)
+            except asyncio.CancelledError:
+                await sub.aclose()
+                return
+            except Exception as exc:
+                logger.warning(
+                    "ChatEventsService: presence subscriber lost ({}), reconnecting in 5s", exc
+                )
+                await sub.aclose()
+                await asyncio.sleep(5)
 
     # ------------------------------------------------------------------
     # Config management
@@ -268,13 +317,13 @@ class ChatEventsService(Service):
 
     @staticmethod
     def _format_time(seconds: float) -> str:
-        """Convert a duration in seconds to M:SS or H:MM:SS."""
+        """Convert a duration in seconds to M:SS or H:MM:SS, with centiseconds when present."""
         total = int(seconds)
+        cs = round((seconds - total) * 100)
         h, remainder = divmod(total, 3600)
         m, s = divmod(remainder, 60)
-        if h:
-            return f"{h}:{m:02}:{s:02}"
-        return f"{m}:{s:02}"
+        base = f"{h}:{m:02}:{s:02}" if h else f"{m}:{s:02}"
+        return f"{base}.{cs:02}" if cs else base
 
     def _loot_embed(self, data: dict[str, Any]) -> discord.Embed:
         player = self._clean(data.get("player_name", "Unknown"))
@@ -485,6 +534,6 @@ class ChatEventsService(Service):
     def _chat_message(self, data: dict[str, Any]) -> str:
         player = self._clean(data.get("player_name", data.get("sender", "Unknown")))
         message = data.get("raw_message", "")
-        color = _CHAT_COLORS[self._chat_color_index % 2]
+        color = _CHAT_COLORS[self._chat_color_index % len(_CHAT_COLORS)]
         self._chat_color_index += 1
         return f"```ansi\n{color}{player}{_ANSI_RESET}: {message}\n```"

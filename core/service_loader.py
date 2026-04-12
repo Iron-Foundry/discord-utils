@@ -124,7 +124,7 @@ async def load_chat_events_service(
 
     repo = MongoChatEventsRepository(mongo_uri=mongo_uri, db_name=db_name)
     valkey = Valkey.from_url(valkey_uri)
-    service = ChatEventsService(guild=guild, repo=repo, valkey=valkey, client=client)
+    service = ChatEventsService(guild=guild, repo=repo, valkey=valkey, valkey_uri=valkey_uri, client=client)
     await service.initialize()
 
     register_chat_events_events(service, client)
