@@ -24,6 +24,12 @@ _LEAGUES_IMG_TAG_RE = re.compile(r"<img=22>")
 _WIKI_BASE = "https://oldschool.runescape.wiki/images"
 _LEAGUES_ICON_URL = f"{_WIKI_BASE}/Leagues_icon.png"
 
+# ANSI escape codes for Discord ```ansi``` code blocks
+_ANSI_RESET = "\u001b[0m"
+_ANSI_TEAL = "\u001b[1;36m"
+_ANSI_LIGHT_BLUE = "\u001b[1;34m"
+_CHAT_COLORS = (_ANSI_TEAL, _ANSI_LIGHT_BLUE)
+
 
 def _wiki_name(name: str) -> str:
     return quote(name.replace(" ", "_"), safe="")
@@ -70,6 +76,7 @@ class ChatEventsService(Service):
         self._client = client
         self._config: ClanEventsConfig | None = None
         self._consumer_task: asyncio.Task[None] | None = None
+        self._chat_color_index: int = 0
 
     async def initialize(self) -> None:
         """Load config, ensure indexes, and create the consumer group."""
@@ -147,6 +154,8 @@ class ChatEventsService(Service):
             except asyncio.CancelledError:
                 logger.info("ChatEventsService: consumer task cancelled")
                 return
+            except TimeoutError:
+                continue
             except Exception as exc:
                 logger.error("ChatEventsService: consumer error: {}", exc)
                 await asyncio.sleep(2)
@@ -460,4 +469,6 @@ class ChatEventsService(Service):
     def _chat_message(self, data: dict[str, Any]) -> str:
         player = self._clean(data.get("player_name", data.get("sender", "Unknown")))
         message = data.get("raw_message", "")
-        return f"**{player}**: {message}"
+        color = _CHAT_COLORS[self._chat_color_index % 2]
+        self._chat_color_index += 1
+        return f"```ansi\n{color}{player}{_ANSI_RESET}: {message}\n```"
