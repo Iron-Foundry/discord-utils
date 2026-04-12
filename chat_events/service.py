@@ -19,8 +19,10 @@ if TYPE_CHECKING:
     pass
 
 _IMG_TAG_RE = re.compile(r"<img=\d+>\s*")
+_LEAGUES_IMG_TAG_RE = re.compile(r"<img=22>")
 
 _WIKI_BASE = "https://oldschool.runescape.wiki/images"
+_LEAGUES_ICON_URL = f"{_WIKI_BASE}/Leagues_icon.png"
 
 
 def _wiki_name(name: str) -> str:
@@ -206,6 +208,14 @@ class ChatEventsService(Service):
         """Strip OSRS image tags (e.g. ``<img=2>``) from a string."""
         return _IMG_TAG_RE.sub("", value).strip()
 
+    @staticmethod
+    def _is_leagues(data: dict[str, Any]) -> bool:
+        """Return True if the event originated from a Leagues world."""
+        if data.get("is_league_world"):
+            return True
+        raw: str = data.get("raw_message", "")
+        return bool(_LEAGUES_IMG_TAG_RE.search(raw))
+
     def _build_embed(
         self, event_type: str, data: dict[str, Any]
     ) -> discord.Embed | None:
@@ -235,7 +245,10 @@ class ChatEventsService(Service):
                 data,
             )
             return None
-        return builder(data)
+        embed = builder(data)
+        if self._is_leagues(data):
+            embed.set_footer(text="Leagues World", icon_url=_LEAGUES_ICON_URL)
+        return embed
 
     # ------------------------------------------------------------------
     # Embed builders
@@ -447,4 +460,4 @@ class ChatEventsService(Service):
     def _chat_message(self, data: dict[str, Any]) -> str:
         player = self._clean(data.get("player_name", data.get("sender", "Unknown")))
         message = data.get("raw_message", "")
-        return f"{player}: {message}"
+        return f"**{player}**: {message}"
