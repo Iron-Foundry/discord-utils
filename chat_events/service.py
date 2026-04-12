@@ -5,6 +5,7 @@ import hashlib
 import json
 import re
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 import discord
 from loguru import logger
@@ -18,6 +19,30 @@ if TYPE_CHECKING:
     pass
 
 _IMG_TAG_RE = re.compile(r"<img=\d+>\s*")
+
+_WIKI_BASE = "https://oldschool.runescape.wiki/images"
+
+
+def _wiki_name(name: str) -> str:
+    return quote(name.replace(" ", "_"), safe="")
+
+
+def _wiki_item_url(item_name: str) -> str:
+    return f"{_WIKI_BASE}/{_wiki_name(item_name)}_detail.png"
+
+
+def _wiki_rank_url(rank: str) -> str:
+    name = "Deputy_owner" if rank == "Deputy Owner" else _wiki_name(rank)
+    return f"{_WIKI_BASE}/Clan_icon_-_{name}.png"
+
+
+def _wiki_quest_scroll_url(quest: str) -> str:
+    return f"{_WIKI_BASE}/{_wiki_name(quest)}_reward_scroll.png"
+
+
+def _wiki_skill_icon_url(skill: str) -> str:
+    return f"{_WIKI_BASE}/{_wiki_name(skill)}_icon_(detail).png"
+
 
 STREAM_KEY = "foundry:clan_events"
 CONSUMER_GROUP = "discord-utils"
@@ -237,6 +262,7 @@ class ChatEventsService(Service):
             color=discord.Color.gold(),
         )
         embed.set_author(name="Loot Drop")
+        embed.set_thumbnail(url=_wiki_item_url(item))
         return embed
 
     def _levelup_embed(self, data: dict[str, Any]) -> discord.Embed:
@@ -248,6 +274,7 @@ class ChatEventsService(Service):
             color=discord.Color.blue(),
         )
         embed.set_author(name="Level Up!")
+        embed.set_thumbnail(url=_wiki_skill_icon_url(skill))
         return embed
 
     def _achievement_embed(self, data: dict[str, Any]) -> discord.Embed:
@@ -258,24 +285,33 @@ class ChatEventsService(Service):
             color=discord.Color.purple(),
         )
         embed.set_author(name="Achievement Unlocked")
+        embed.set_thumbnail(url=_wiki_quest_scroll_url(name))
         return embed
 
     def _pet_embed(self, data: dict[str, Any]) -> discord.Embed:
         player = self._clean(data.get("player_name", "Unknown"))
-        embed = discord.Embed(
-            description=f"**{player}** received a pet!",
-            color=discord.Color.green(),
+        pet_name: str | None = data.get("pet_name")
+        description = (
+            f"**{player}** received **{pet_name}**!"
+            if pet_name
+            else f"**{player}** received a pet!"
         )
+        embed = discord.Embed(description=description, color=discord.Color.green())
         embed.set_author(name="Pet Drop!")
+        if pet_name:
+            embed.set_thumbnail(url=_wiki_item_url(pet_name))
         return embed
 
     def _new_member_embed(self, data: dict[str, Any]) -> discord.Embed:
         player = self._clean(data.get("player_name", "Unknown"))
+        rank: str | None = data.get("rank")
         embed = discord.Embed(
             description=f"**{player}** has joined the clan",
             color=discord.Color.teal(),
         )
         embed.set_author(name="New Member")
+        if rank:
+            embed.set_thumbnail(url=_wiki_rank_url(rank))
         return embed
 
     def _xpmilestone_embed(self, data: dict[str, Any]) -> discord.Embed:
@@ -287,6 +323,7 @@ class ChatEventsService(Service):
             color=discord.Color.blue(),
         )
         embed.set_author(name="XP Milestone")
+        embed.set_thumbnail(url=_wiki_skill_icon_url(skill))
         return embed
 
     def _collection_log_embed(self, data: dict[str, Any]) -> discord.Embed:
@@ -301,6 +338,7 @@ class ChatEventsService(Service):
             color=discord.Color.og_blurple(),
         )
         embed.set_author(name="Collection Log")
+        embed.set_thumbnail(url=_wiki_item_url(item))
         return embed
 
     def _loot_key_embed(self, data: dict[str, Any]) -> discord.Embed:
@@ -311,6 +349,7 @@ class ChatEventsService(Service):
             color=discord.Color.gold(),
         )
         embed.set_author(name="Loot Key")
+        embed.set_thumbnail(url=_wiki_item_url("Loot key"))
         return embed
 
     def _clue_item_embed(self, data: dict[str, Any]) -> discord.Embed:
@@ -325,6 +364,7 @@ class ChatEventsService(Service):
             color=discord.Color.gold(),
         )
         embed.set_author(name="Clue Scroll Reward")
+        embed.set_thumbnail(url=_wiki_item_url(item))
         return embed
 
     def _pk_embed(self, data: dict[str, Any]) -> discord.Embed:
@@ -357,21 +397,27 @@ class ChatEventsService(Service):
 
     def _left_clan_embed(self, data: dict[str, Any]) -> discord.Embed:
         player = self._clean(data.get("player_name", "Unknown"))
+        rank: str | None = data.get("rank")
         embed = discord.Embed(
             description=f"**{player}** has left the clan",
             color=discord.Color.light_grey(),
         )
         embed.set_author(name="Member Left")
+        if rank:
+            embed.set_thumbnail(url=_wiki_rank_url(rank))
         return embed
 
     def _expelled_embed(self, data: dict[str, Any]) -> discord.Embed:
         player = self._clean(data.get("player_name", "Unknown"))
         expelled_by = self._clean(data.get("expelled_by", "Unknown"))
+        rank: str | None = data.get("rank")
         embed = discord.Embed(
             description=f"**{player}** was expelled from the clan by **{expelled_by}**",
             color=discord.Color.dark_red(),
         )
         embed.set_author(name="Member Expelled")
+        if rank:
+            embed.set_thumbnail(url=_wiki_rank_url(rank))
         return embed
 
     def _coffer_donation_embed(self, data: dict[str, Any]) -> discord.Embed:
