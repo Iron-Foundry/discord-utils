@@ -147,6 +147,13 @@ class ChatEventsService(Service):
     # Config management
     # ------------------------------------------------------------------
 
+    async def resolve_sender(self, user: discord.Member | discord.User) -> str:
+        """Return the user's linked RSN, or fall back to their display name."""
+        rsn = await self._repo.get_rsn(user.id)
+        if rsn:
+            return rsn
+        return user.display_name if isinstance(user, discord.Member) else user.name
+
     async def set_channel(self, channel_id: int) -> None:
         """Persist the configured Discord channel."""
         assert self._config is not None
