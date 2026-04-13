@@ -590,7 +590,7 @@ class ChatEventsService(Service):
 
     def _chat_message(self, data: dict[str, Any]) -> str:
         player = self._clean(data.get("player_name", data.get("sender", "Unknown")))
-        message = data.get("raw_message", "")
+        message = data.get("raw_message", "").replace("`", "")
         color = _CHAT_COLORS[self._chat_color_index % len(_CHAT_COLORS)]
         self._chat_color_index += 1
         return f"```ansi\n{color}{player}{_ANSI_RESET}: {message}\n```"
