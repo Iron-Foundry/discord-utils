@@ -10,6 +10,7 @@ from urllib.parse import quote
 import discord
 from loguru import logger
 from valkey.asyncio import Valkey
+from valkey.exceptions import TimeoutError as ValkeyTimeoutError
 
 from chat_events.models import ClanEventsConfig
 from chat_events.repository import MongoChatEventsRepository
@@ -260,7 +261,7 @@ class ChatEventsService(Service):
             except asyncio.CancelledError:
                 logger.info("ChatEventsService: consumer task cancelled")
                 return
-            except TimeoutError:
+            except (TimeoutError, ValkeyTimeoutError):
                 continue
             except Exception as exc:
                 logger.error("ChatEventsService: consumer error: {}", exc)
