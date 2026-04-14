@@ -32,7 +32,7 @@ def register(service: ChatEventsService, client: DiscordClient) -> None:
             "sender": sender,
             "rank": rank,
             "message": content,
-            "guild_name": message.guild.name if message.guild else "",
+            "guild_id": message.guild.id if message.guild else 0,
         })
         logger.info(
             "ChatEvents: publishing to Valkey sender={} rank={} guild={}",
