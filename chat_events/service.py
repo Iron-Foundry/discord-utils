@@ -260,6 +260,11 @@ class ChatEventsService(Service):
     async def _dispatch(self, event_type: str, data: dict[str, Any]) -> None:
         """Route an event to the right embed builder and post to Discord."""
         if not self._config or not self._config.channel_id:
+            logger.warning(
+                "ChatEventsService: no channel configured, dropping '{}' event"
+                " — run /chatevents setchannel",
+                event_type,
+            )
             return
 
         channel = self._guild.get_channel_or_thread(self._config.channel_id)
