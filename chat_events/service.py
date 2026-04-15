@@ -85,9 +85,7 @@ class ChatEventsService(Service):
         self._config: ClanEventsConfig | None = None
         self._consumer_task: asyncio.Task[None] | None = None
         self._presence_task: asyncio.Task[None] | None = None
-        self._channel_name_task: asyncio.Task[None] | None = None
         self._chat_color_index: int = 0
-        self._connected_count: int = 0
 
     async def initialize(self) -> None:
         """Load config, ensure indexes, and create the consumer group."""
@@ -105,9 +103,6 @@ class ChatEventsService(Service):
         )
         self._presence_task = asyncio.create_task(
             self._presence_subscriber(), name="ws-presence-subscriber"
-        )
-        self._channel_name_task = asyncio.create_task(
-            self._channel_name_updater(), name="channel-name-updater"
         )
         logger.info("ChatEventsService: consumer task started")
 
@@ -130,10 +125,9 @@ class ChatEventsService(Service):
                             channel = self._client.get_channel(channel_id)
                             if not isinstance(channel, (discord.TextChannel, discord.Thread)):
                                 continue
+                            if data.get("hide_presence_notifications"):
+                                continue
                             event = data.get("event")
-                            count = data.get("connection_count")
-                            if count is not None:
-                                self._connected_count = count
                             user_id: int = data["discord_user_id"]
                             verb = "connected to" if event == "connect" else "disconnected from"
                             await channel.send(
@@ -180,41 +174,6 @@ class ChatEventsService(Service):
     def channel_id(self) -> int | None:
         """The configured channel ID, or None if not set."""
         return self._config.channel_id if self._config else None
-
-    # ------------------------------------------------------------------
-    # Channel name
-    # ------------------------------------------------------------------
-
-    async def _channel_name_updater(self) -> None:
-        """Update the clan chat channel name every minute to reflect connected users.
-
-        Only calls channel.edit() when the count has changed to stay within
-        Discord's rate limit for channel renames.
-        """
-        last_name: str | None = None
-        while True:
-            try:
-                await asyncio.sleep(60)
-                new_name = f"chatscape-{self._connected_count}"
-                if new_name == last_name:
-                    continue
-                channel_id = self.channel_id
-                if not channel_id:
-                    continue
-                channel = self._guild.get_channel(channel_id)
-                if not isinstance(channel, discord.TextChannel):
-                    continue
-                await channel.edit(name=new_name)
-                last_name = new_name
-                logger.info(
-                    "ChatEventsService: channel renamed to {} ({} connected)",
-                    new_name,
-                    self._connected_count,
-                )
-            except asyncio.CancelledError:
-                return
-            except Exception as exc:
-                logger.warning("ChatEventsService: failed to rename channel: {}", exc)
 
     # ------------------------------------------------------------------
     # Stream consumer
