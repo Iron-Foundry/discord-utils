@@ -105,6 +105,19 @@ def _register_clan_stats_commands(
     logger.info("Clan stats command registered")
 
 
+def _register_test_event_command(
+    guild: discord.Guild,
+    tree: app_commands.CommandTree,
+    registry: HelpRegistry,
+) -> None:
+    """Register the /testevent dev command and its help entry."""
+    from command_infra.test_event import make_test_event_command, register_help
+
+    tree.add_command(make_test_event_command(), guild=guild)
+    register_help(registry)
+    logger.info("Test event command registered")
+
+
 async def load_chat_events_service(
     guild: discord.Guild,
     tree: app_commands.CommandTree,
@@ -147,5 +160,6 @@ async def load_all_services(
     _register_otw_commands(guild, tree, registry)
     _register_roleall_command(guild, tree, registry)
     _register_clan_stats_commands(guild, tree, registry)
+    _register_test_event_command(guild, tree, registry)
     _load_help_command(guild, tree, registry)
     return (temp_vc, clan_events)
