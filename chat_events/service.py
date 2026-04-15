@@ -88,8 +88,8 @@ class ChatEventsService(Service):
         self._chat_color_index: int = 0
 
     async def initialize(self) -> None:
-        """Load config, ensure indexes, and create the consumer group."""
-        await self._repo.ensure_indexes()
+        """Load config, ensure tables, and create the consumer group."""
+        await self._repo.ensure_tables()
         self._config = await self._repo.get_config(self._guild.id)
         if self._config is None:
             self._config = ClanEventsConfig(guild_id=self._guild.id)

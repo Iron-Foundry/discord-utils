@@ -10,6 +10,7 @@ from discord import app_commands
 from loguru import logger
 
 from command_infra.help_registry import HelpRegistry
+from core.db.engine import get_session_factory
 
 if TYPE_CHECKING:
     from chat_events.service import ChatEventsService
@@ -21,7 +22,6 @@ async def load_temp_vc_service(
     guild: discord.Guild,
     tree: app_commands.CommandTree,
     registry: HelpRegistry,
-    pg_uri: str,
     client: DiscordClient,
 ) -> TempVCService:
     """Initialise the temp VC service and register its slash commands."""
@@ -30,7 +30,7 @@ async def load_temp_vc_service(
     from temp_vc.repository import PgTempVCRepository
     from temp_vc.service import TempVCService
 
-    repo = PgTempVCRepository(pg_uri=pg_uri)
+    repo = PgTempVCRepository(session_factory=get_session_factory())
     service = TempVCService(guild=guild, repo=repo)
     await service.initialize()
 
@@ -121,7 +121,6 @@ def _register_test_event_command(
 async def load_chat_events_service(
     guild: discord.Guild,
     tree: app_commands.CommandTree,
-    pg_uri: str,
     valkey_uri: str,
     client: DiscordClient,
 ) -> ChatEventsService:
@@ -133,9 +132,11 @@ async def load_chat_events_service(
     from chat_events.repository import PgChatEventsRepository
     from chat_events.service import ChatEventsService
 
-    repo = PgChatEventsRepository(pg_uri=pg_uri)
+    repo = PgChatEventsRepository(session_factory=get_session_factory())
     valkey = Valkey.from_url(valkey_uri)
-    service = ChatEventsService(guild=guild, repo=repo, valkey=valkey, valkey_uri=valkey_uri, client=client)
+    service = ChatEventsService(
+        guild=guild, repo=repo, valkey=valkey, valkey_uri=valkey_uri, client=client
+    )
     await service.initialize()
 
     register_chat_events_events(service, client)
@@ -149,13 +150,12 @@ async def load_all_services(
     tree: app_commands.CommandTree,
     registry: HelpRegistry,
     client: DiscordClient,
-    pg_uri: str,
     valkey_uri: str,
 ) -> tuple[TempVCService, ChatEventsService]:
     """Load all services in parallel, then register stateless commands and /help."""
     temp_vc, clan_events = await asyncio.gather(
-        load_temp_vc_service(guild, tree, registry, pg_uri, client),
-        load_chat_events_service(guild, tree, pg_uri, valkey_uri, client),
+        load_temp_vc_service(guild, tree, registry, client),
+        load_chat_events_service(guild, tree, valkey_uri, client),
     )
     _register_otw_commands(guild, tree, registry)
     _register_roleall_command(guild, tree, registry)

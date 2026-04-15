@@ -13,5 +13,6 @@ dependencies = [
     "plotly<6",
     "pydantic>=2.12.3",
     "python-dotenv>=1.2.2",
+    "sqlalchemy[asyncio]>=2.0.49",
     "valkey>=6.1.1",
 ]

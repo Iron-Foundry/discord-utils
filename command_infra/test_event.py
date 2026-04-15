@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import json
-import os
 from datetime import UTC, datetime
 
-import asyncpg
 import discord
 from discord import app_commands
 from loguru import logger
+from sqlalchemy import select, text
 
 from command_infra.checks import handle_check_failure, is_senior_staff
 from command_infra.help_registry import HelpEntry, HelpGroup, HelpRegistry
@@ -101,43 +100,45 @@ def _build_data(
             return {}
 
 
-async def _get_rsn(pg_uri: str, discord_user_id: int) -> str | None:
+async def _get_rsn(discord_user_id: int) -> str | None:
     """Return the member's linked RSN, or None."""
-    conn: asyncpg.Connection = await asyncpg.connect(pg_uri)
-    try:
-        row = await conn.fetchrow(
-            "SELECT rsn FROM users WHERE discord_user_id = $1", discord_user_id
-        )
-        return row["rsn"] if row else None
-    finally:
-        await conn.close()
+    from core.db.engine import get_session_factory
+    from core.db.models import User
+
+    async with get_session_factory()() as session:
+        row = await session.get(User, discord_user_id)
+    return row.rsn if row else None
 
 
 async def _insert_event(
-    pg_uri: str,
     event_type: str,
     player_name: str,
     user_id: int,
     data: dict,
 ) -> int:
     """Insert an event row and return its new id."""
-    conn: asyncpg.Connection = await asyncpg.connect(pg_uri)
-    try:
-        row = await conn.fetchrow(
-            """
-            INSERT INTO events (type, timestamp, player_name, data, user_id)
-            VALUES ($1, $2, $3, $4::jsonb, $5)
-            RETURNING id
-            """,
-            event_type,
-            datetime.now(UTC),
-            player_name,
-            json.dumps(data),
-            user_id,
+    from core.db.engine import get_session_factory
+
+    stmt = text(
+        """
+        INSERT INTO events (type, timestamp, player_name, data, user_id)
+        VALUES (:type, :ts, :player, :data::jsonb, :uid)
+        RETURNING id
+        """
+    )
+    async with get_session_factory()() as session:
+        result = await session.execute(
+            stmt,
+            {
+                "type": event_type,
+                "ts": datetime.now(UTC),
+                "player": player_name,
+                "data": json.dumps(data),
+                "uid": user_id,
+            },
         )
-        return row["id"]  # type: ignore[index]
-    finally:
-        await conn.close()
+        await session.commit()
+        return result.scalar_one()
 
 
 def make_test_event_command() -> app_commands.Command:  # type: ignore[type-arg]
@@ -166,14 +167,7 @@ def make_test_event_command() -> app_commands.Command:  # type: ignore[type-arg]
     ) -> None:
         await interaction.response.defer(ephemeral=True, thinking=True)
 
-        pg_uri = os.getenv("DATABASE_URL")
-        if not pg_uri:
-            await interaction.followup.send(
-                "DATABASE_URL is not configured.", ephemeral=True
-            )
-            return
-
-        rsn = await _get_rsn(pg_uri, member.id)
+        rsn = await _get_rsn(member.id)
         if not rsn:
             await interaction.followup.send(
                 f"{member.mention} has no linked RSN — link one first via `/settings`.",
@@ -182,7 +176,7 @@ def make_test_event_command() -> app_commands.Command:  # type: ignore[type-arg]
             return
 
         data = _build_data(event_type.value, name, value, source, rsn)
-        event_id = await _insert_event(pg_uri, event_type.value, rsn, member.id, data)
+        event_id = await _insert_event(event_type.value, rsn, member.id, data)
 
         logger.info(
             "testevent: inserted {} event #{} for {} (rsn={!r}) by {}",

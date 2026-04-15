@@ -21,8 +21,8 @@ class TempVCService(Service):
         self._config: TempVCConfig | None = None
 
     async def initialize(self) -> None:
-        """Load config from DB, ensure indexes, and restore trigger channel if missing."""
-        await self._repo.ensure_indexes()
+        """Load config from DB, ensure tables, and restore trigger channel if missing."""
+        await self._repo.ensure_tables()
         self._config = await self._repo.get_config(self._guild.id)
         if self._config is None:
             self._config = TempVCConfig(guild_id=self._guild.id)

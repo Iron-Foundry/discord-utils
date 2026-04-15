@@ -42,7 +42,7 @@ class DiscordClient(discord.Client):
             logger.exception(f"Could not fetch guild with ID {guild_id_str}")
 
     async def _init_services(self) -> None:
-        """Fetch DB credentials once and load all services in parallel."""
+        """Initialise the DB engine and load all services."""
         pg_uri = self.config.get_variable(ConfigVars.DATABASE_URL)
         valkey_uri = (
             self.config.get_variable(ConfigVars.VALKEY_URI) or "redis://localhost:6379"
@@ -52,13 +52,19 @@ class DiscordClient(discord.Client):
             logger.error("DATABASE_URL not set — no services will start")
             return
 
+        from core.db.engine import ensure_tables, init_engine
+
+        # SQLAlchemy async requires the postgresql+asyncpg:// scheme
+        sa_uri = pg_uri.replace("postgresql://", "postgresql+asyncpg://", 1)
+        init_engine(sa_uri)
+        await ensure_tables()
+
         assert self._guild is not None
         services = await load_all_services(
             guild=self._guild,
             tree=self.command_handler.tree,
             registry=self.help_registry,
             client=self,
-            pg_uri=pg_uri,
             valkey_uri=valkey_uri,
         )
         self.service_handler.register(*services)
