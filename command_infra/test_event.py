@@ -8,7 +8,6 @@ from datetime import UTC, datetime
 import discord
 from discord import app_commands
 from loguru import logger
-from sqlalchemy import select, text
 
 from command_infra.checks import handle_check_failure, is_senior_staff
 from command_infra.help_registry import HelpEntry, HelpGroup, HelpRegistry
@@ -118,27 +117,21 @@ async def _insert_event(
 ) -> int:
     """Insert an event row and return its new id."""
     from core.db.engine import get_session_factory
+    from core.db.models import Event
 
-    stmt = text(
-        """
-        INSERT INTO events (type, timestamp, player_name, data, user_id)
-        VALUES (:type, :ts, :player, :data::jsonb, :uid)
-        RETURNING id
-        """
+    event = Event(
+        type=event_type,
+        timestamp=datetime.now(UTC),
+        player_name=player_name,
+        data=data,
+        user_id=user_id,
     )
     async with get_session_factory()() as session:
-        result = await session.execute(
-            stmt,
-            {
-                "type": event_type,
-                "ts": datetime.now(UTC),
-                "player": player_name,
-                "data": json.dumps(data),
-                "uid": user_id,
-            },
-        )
+        session.add(event)
+        await session.flush()
+        event_id = event.id
         await session.commit()
-        return result.scalar_one()
+    return event_id
 
 
 def make_test_event_command() -> app_commands.Command:  # type: ignore[type-arg]
@@ -206,7 +199,15 @@ def make_test_event_command() -> app_commands.Command:  # type: ignore[type-arg]
     async def testevent_error(
         interaction: discord.Interaction, error: app_commands.AppCommandError
     ) -> None:
-        await handle_check_failure(interaction, error)
+        if isinstance(error, app_commands.CheckFailure):
+            await handle_check_failure(interaction, error)
+            return
+        logger.exception("testevent: unhandled error", exc_info=error)
+        msg = f"Error: {error.__cause__ or error}"
+        if interaction.response.is_done():
+            await interaction.followup.send(msg, ephemeral=True)
+        else:
+            await interaction.response.send_message(msg, ephemeral=True)
 
     return testevent  # type: ignore[return-value]
 

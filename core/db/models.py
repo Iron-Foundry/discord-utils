@@ -6,9 +6,12 @@ Must stay in sync with the schema defined in core/db/engine.py.
 
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, Boolean, Integer, Text
+from datetime import datetime
+
+from sqlalchemy import BigInteger, Boolean, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.types import TIMESTAMP
 
 
 class Base(DeclarativeBase):
@@ -44,6 +47,24 @@ class ClanEventsConfig(Base):
 
     guild_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     channel_id: Mapped[int | None] = mapped_column(BigInteger)
+
+
+class Event(Base):
+    """Shared events table (owned by api-backend, written to by discord-utils for testing)."""
+
+    __tablename__ = "events"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    type: Mapped[str] = mapped_column(Text, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
+    player_name: Mapped[str | None] = mapped_column(Text)
+    sender: Mapped[str | None] = mapped_column(Text)
+    is_league_world: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+    raw_message: Mapped[str | None] = mapped_column(Text)
+    data: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default="{}")
+    user_id: Mapped[int | None] = mapped_column(BigInteger)
 
 
 class User(Base):
