@@ -47,18 +47,6 @@ class MongoChatEventsRepository:
             logger.error(f"Failed to fetch sender info for user {discord_user_id}: {e}")
             return None
 
-    async def get_discord_user_id_by_rsn(self, rsn: str) -> int | None:
-        """Return the discord_user_id for the given RSN, or None if not found."""
-        try:
-            doc = await self._db["users"].find_one(
-                {"rsn": {"$regex": f"^{rsn}$", "$options": "i"}},
-                {"discord_user_id": 1, "_id": 0},
-            )
-            return doc["discord_user_id"] if doc else None
-        except PyMongoError as e:
-            logger.error(f"Failed to fetch discord_user_id for rsn {rsn!r}: {e}")
-            return None
-
     async def save_config(self, config: ClanEventsConfig) -> None:
         """Upsert the chat events config for the guild."""
         try:

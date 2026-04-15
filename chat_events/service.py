@@ -58,13 +58,6 @@ def _wiki_skill_icon_url(skill: str) -> str:
     return f"{_WIKI_BASE}/{_wiki_name(skill)}_icon_(detail).png"
 
 
-# Maps in-game clan rank → Discord role name.
-# Managed roles are only ever added/removed by this mapping — no other roles are touched.
-INGAME_RANK_TO_DISCORD_ROLE: dict[str, str] = {
-    "Lieutenant": "Trial Moderator",
-}
-_MANAGED_DISCORD_ROLES: frozenset[str] = frozenset(INGAME_RANK_TO_DISCORD_ROLE.values())
-
 STREAM_KEY = "foundry:clan_events"
 CONSUMER_GROUP = "discord-utils"
 CONSUMER_NAME = "discord-utils-1"
@@ -321,49 +314,10 @@ class ChatEventsService(Service):
         if event_type == "chat":
             content = self._chat_message(data)
             await channel.send(content)
-            await self._sync_member_rank(
-                data.get("player_name", ""), data.get("rank", "")
-            )
         else:
             embed = self._build_embed(event_type, data)
             if embed:
                 await channel.send(embed=embed)
-
-    async def _sync_member_rank(self, player_name: str, ingame_rank: str) -> None:
-        """Assign or remove managed Discord roles based on in-game rank."""
-        if not player_name or not ingame_rank:
-            return
-
-        discord_user_id = await self._repo.get_discord_user_id_by_rsn(player_name)
-        if discord_user_id is None:
-            return
-
-        member = self._guild.get_member(discord_user_id)
-        if member is None:
-            return
-
-        target_role_name = INGAME_RANK_TO_DISCORD_ROLE.get(ingame_rank)
-
-        for role in self._guild.roles:
-            if role.name not in _MANAGED_DISCORD_ROLES:
-                continue
-            has_role = any(r.id == role.id for r in member.roles)
-            should_have = role.name == target_role_name
-            try:
-                if should_have and not has_role:
-                    await member.add_roles(role, reason=f"In-game rank: {ingame_rank}")
-                    logger.info(
-                        "RankSync: added {} to {} (rank={})",
-                        role.name, member, ingame_rank,
-                    )
-                elif not should_have and has_role:
-                    await member.remove_roles(role, reason=f"In-game rank changed to: {ingame_rank}")
-                    logger.info(
-                        "RankSync: removed {} from {} (rank={})",
-                        role.name, member, ingame_rank,
-                    )
-            except discord.HTTPException as exc:
-                logger.warning("RankSync: failed to update {} for {}: {}", role.name, member, exc)
 
     @staticmethod
     def _clean(value: str | None) -> str:
