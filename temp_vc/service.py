@@ -7,7 +7,7 @@ from loguru import logger
 
 from core.service_base import Service
 from temp_vc.models import TempVCConfig, TempVCUserSettings
-from temp_vc.repository import MongoTempVCRepository
+from temp_vc.repository import PgTempVCRepository
 
 TRIGGER_CHANNEL_NAME = "➕ Create VC"
 
@@ -15,7 +15,7 @@ TRIGGER_CHANNEL_NAME = "➕ Create VC"
 class TempVCService(Service):
     """Manages on-demand temporary voice channels."""
 
-    def __init__(self, guild: discord.Guild, repo: MongoTempVCRepository) -> None:
+    def __init__(self, guild: discord.Guild, repo: PgTempVCRepository) -> None:
         self._guild = guild
         self._repo = repo
         self._config: TempVCConfig | None = None

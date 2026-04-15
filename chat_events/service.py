@@ -13,7 +13,7 @@ from valkey.asyncio import Valkey
 from valkey.exceptions import TimeoutError as ValkeyTimeoutError
 
 from chat_events.models import ClanEventsConfig
-from chat_events.repository import MongoChatEventsRepository
+from chat_events.repository import PgChatEventsRepository
 from core.service_base import Service
 
 if TYPE_CHECKING:
@@ -72,7 +72,7 @@ class ChatEventsService(Service):
     def __init__(
         self,
         guild: discord.Guild,
-        repo: MongoChatEventsRepository,
+        repo: PgChatEventsRepository,
         valkey: Valkey,
         valkey_uri: str,
         client: discord.Client,

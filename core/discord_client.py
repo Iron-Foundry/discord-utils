@@ -42,15 +42,14 @@ class DiscordClient(discord.Client):
             logger.exception(f"Could not fetch guild with ID {guild_id_str}")
 
     async def _init_services(self) -> None:
-        """Fetch mongo credentials once and load all services in parallel."""
-        mongo_uri = self.config.get_variable(ConfigVars.MONGO_URI)
-        db_name = self.config.get_variable(ConfigVars.MONGO_DB_NAME) or "foundry"
+        """Fetch DB credentials once and load all services in parallel."""
+        pg_uri = self.config.get_variable(ConfigVars.DATABASE_URL)
         valkey_uri = (
             self.config.get_variable(ConfigVars.VALKEY_URI) or "redis://localhost:6379"
         )
 
-        if not mongo_uri:
-            logger.error("MONGO_URI not set — no services will start")
+        if not pg_uri:
+            logger.error("DATABASE_URL not set — no services will start")
             return
 
         assert self._guild is not None
@@ -59,8 +58,7 @@ class DiscordClient(discord.Client):
             tree=self.command_handler.tree,
             registry=self.help_registry,
             client=self,
-            mongo_uri=mongo_uri,
-            db_name=db_name,
+            pg_uri=pg_uri,
             valkey_uri=valkey_uri,
         )
         self.service_handler.register(*services)
