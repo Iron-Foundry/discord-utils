@@ -8,16 +8,26 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
 
 import discord
+import httpx
 from loguru import logger
 from valkey.asyncio import Valkey
 from valkey.exceptions import TimeoutError as ValkeyTimeoutError
 
+from chat_events.lookups import (
+    all_clue_tiers,
+    resolve_boss,
+    resolve_clue_tier,
+    resolve_skill,
+)
 from chat_events.models import ClanEventsConfig
 from chat_events.repository import PgChatEventsRepository
 from core.service_base import Service
 
 if TYPE_CHECKING:
     pass
+
+_WOM_BASE = "https://api.wiseoldman.net/v2"
+_WOM_HEADERS = {"User-Agent": "IronFoundry/1.0"}
 
 _IMG_TAG_RE = re.compile(r"<img=\d+>\s*")
 _LEAGUES_IMG_TAG_RE = re.compile(r"<img=22>")
@@ -123,25 +133,34 @@ class ChatEventsService(Service):
                             if not channel_id:
                                 continue
                             channel = self._client.get_channel(channel_id)
-                            if not isinstance(channel, (discord.TextChannel, discord.Thread)):
+                            if not isinstance(
+                                channel, (discord.TextChannel, discord.Thread)
+                            ):
                                 continue
                             if data.get("hide_presence_notifications"):
                                 continue
                             event = data.get("event")
                             user_id: int = data["discord_user_id"]
-                            verb = "connected to" if event == "connect" else "disconnected from"
+                            verb = (
+                                "connected to"
+                                if event == "connect"
+                                else "disconnected from"
+                            )
                             await channel.send(
                                 f"<@{user_id}> {verb} the in-game clan chat.",
                                 allowed_mentions=discord.AllowedMentions(users=False),
                             )
                         except Exception as exc:
-                            logger.warning("ChatEventsService: presence handler error: {}", exc)
+                            logger.warning(
+                                "ChatEventsService: presence handler error: {}", exc
+                            )
             except asyncio.CancelledError:
                 await sub.aclose()
                 return
             except Exception as exc:
                 logger.warning(
-                    "ChatEventsService: presence subscriber lost ({}), reconnecting in 5s", exc
+                    "ChatEventsService: presence subscriber lost ({}), reconnecting in 5s",
+                    exc,
                 )
                 await sub.aclose()
                 await asyncio.sleep(5)
@@ -276,12 +295,218 @@ class ChatEventsService(Service):
             return
 
         if event_type == "chat":
-            content = self._chat_message(data)
-            await channel.send(content)
+            if not await self._try_chat_command(data, channel):
+                content = self._chat_message(data)
+                await channel.send(content)
         else:
             embed = self._build_embed(event_type, data)
             if embed:
                 await channel.send(embed=embed)
+
+    async def _try_chat_command(
+        self,
+        data: dict[str, Any],
+        channel: discord.TextChannel | discord.Thread,
+    ) -> bool:
+        """Intercept !kc / !level / !lvl. Returns True if the message was a command."""
+        raw: str = data.get("raw_message", "").strip()
+        parts = raw.split(None, 1)
+        if not parts:
+            return False
+
+        cmd = parts[0].lower()
+        arg = parts[1].strip() if len(parts) > 1 else ""
+
+        if cmd not in ("!kc", "!level", "!lvl", "!clues") or not arg:
+            return False
+
+        rsn = self._clean(data.get("player_name", ""))
+        if not rsn:
+            return False
+
+        player = await self._fetch_wom_player(rsn)
+
+        if cmd == "!kc":
+            embed = self._kc_embed(rsn, arg, player)
+        elif cmd == "!clues":
+            embed = self._clue_embed(rsn, arg, player)
+        else:
+            embed = self._level_embed(rsn, arg, player)
+
+        await channel.send(embed=embed)
+        return True
+
+    async def _fetch_wom_player(self, rsn: str) -> dict[str, Any] | None:
+        """Fetch player data from WiseOldMan. Returns None on 404 or error."""
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(
+                    f"{_WOM_BASE}/players/{rsn}",
+                    headers=_WOM_HEADERS,
+                )
+            if resp.status_code == 404:
+                return None
+            resp.raise_for_status()
+            return resp.json()  # type: ignore[no-any-return]
+        except Exception:
+            logger.exception("ChatEventsService: WOM fetch failed for {}", rsn)
+            return None
+
+    def _kc_embed(
+        self,
+        rsn: str,
+        query: str,
+        player: dict[str, Any] | None,
+    ) -> discord.Embed:
+        """Build a kill count embed for the given boss query."""
+        boss = resolve_boss(query)
+        if boss is None:
+            return discord.Embed(
+                description=f"No boss found matching **{query}**.",
+                color=discord.Color.greyple(),
+            )
+
+        wom_key, display_name, wom_section = boss
+        display_rsn = player.get("displayName") or rsn if player else rsn
+
+        if player is None:
+            return discord.Embed(
+                description=f"**{display_rsn}** not found on WiseOldMan.",
+                color=discord.Color.greyple(),
+            )
+
+        snapshot = (player.get("latestSnapshot") or {}).get("data") or {}
+        entry: dict[str, Any] = (snapshot.get(wom_section) or {}).get(wom_key) or {}
+        # Activities use "score"; bosses use "kills"
+        count_key = "score" if wom_section == "activities" else "kills"
+        count: int = entry.get(count_key) or -1
+        rank: int = entry.get("rank") or -1
+        ehb: float = entry.get("ehb") or 0.0
+
+        embed = discord.Embed(color=discord.Color.dark_gold())
+        embed.set_author(name=f"{display_name} KC — {display_rsn}")
+
+        if count < 0:
+            embed.description = "No kills recorded on WiseOldMan."
+            embed.color = discord.Color.greyple()
+        else:
+            embed.add_field(name="Kill Count", value=f"{count:,}", inline=True)
+            embed.add_field(
+                name="Rank",
+                value=f"#{rank:,}" if rank > 0 else "Unranked",
+                inline=True,
+            )
+            if ehb > 0:
+                embed.add_field(name="EHB", value=f"{ehb:.1f} hrs", inline=True)
+
+        embed.set_footer(text="WiseOldMan")
+        return embed
+
+    def _clue_embed(
+        self,
+        rsn: str,
+        query: str,
+        player: dict[str, Any] | None,
+    ) -> discord.Embed:
+        """Build a clue scroll count embed. 'total'/'all' shows a tier breakdown."""
+        display_rsn = player.get("displayName") or rsn if player else rsn
+
+        if player is None:
+            return discord.Embed(
+                description=f"**{display_rsn}** not found on WiseOldMan.",
+                color=discord.Color.greyple(),
+            )
+
+        tier = resolve_clue_tier(query)
+        if tier is None:
+            return discord.Embed(
+                description=f"No clue tier found matching **{query}**.",
+                color=discord.Color.greyple(),
+            )
+
+        wom_key, display_name = tier
+        snapshot = (player.get("latestSnapshot") or {}).get("data") or {}
+        activities: dict[str, Any] = snapshot.get("activities") or {}
+
+        embed = discord.Embed(color=discord.Color.from_rgb(139, 90, 43))
+        embed.set_footer(text="WiseOldMan")
+
+        if wom_key == "clue_scrolls_all":
+            embed.set_author(name=f"Clue Scrolls — {display_rsn}")
+            for tier_key, tier_label in all_clue_tiers():
+                data: dict[str, Any] = activities.get(tier_key) or {}
+                score: int = data.get("score") or 0
+                embed.add_field(
+                    name=tier_label,
+                    value=f"{score:,}" if score > 0 else "0",
+                    inline=True,
+                )
+        else:
+            embed.set_author(name=f"{display_name} — {display_rsn}")
+            data = activities.get(wom_key) or {}
+            score = data.get("score") or -1
+            rank: int = data.get("rank") or -1
+            if score < 0:
+                embed.description = "No clues recorded on WiseOldMan."
+                embed.color = discord.Color.greyple()
+            else:
+                embed.add_field(name="Count", value=f"{score:,}", inline=True)
+                embed.add_field(
+                    name="Rank",
+                    value=f"#{rank:,}" if rank > 0 else "Unranked",
+                    inline=True,
+                )
+
+        return embed
+
+    def _level_embed(
+        self,
+        rsn: str,
+        query: str,
+        player: dict[str, Any] | None,
+    ) -> discord.Embed:
+        """Build a skill level embed for the given skill query."""
+        skill_key = resolve_skill(query)
+        if skill_key is None:
+            return discord.Embed(
+                description=f"No skill found matching **{query}**.",
+                color=discord.Color.greyple(),
+            )
+
+        display_skill = skill_key.capitalize()
+        display_rsn = player.get("displayName") or rsn if player else rsn
+
+        if player is None:
+            return discord.Embed(
+                description=f"**{display_rsn}** not found on WiseOldMan.",
+                color=discord.Color.greyple(),
+            )
+
+        snapshot = (player.get("latestSnapshot") or {}).get("data") or {}
+        skill_data: dict[str, Any] = (snapshot.get("skills") or {}).get(skill_key) or {}
+        level: int = skill_data.get("level") or -1
+        xp: int = skill_data.get("experience") or -1
+        rank: int = skill_data.get("rank") or -1
+
+        embed = discord.Embed(color=discord.Color.blue())
+        embed.set_author(name=f"{display_skill} — {display_rsn}")
+        embed.set_thumbnail(url=_wiki_skill_icon_url(display_skill))
+
+        if level < 0:
+            embed.description = "No data on WiseOldMan."
+            embed.color = discord.Color.greyple()
+        else:
+            embed.add_field(name="Level", value=str(level), inline=True)
+            embed.add_field(
+                name="Rank",
+                value=f"#{rank:,}" if rank > 0 else "Unranked",
+                inline=True,
+            )
+            if xp >= 0:
+                embed.add_field(name="XP", value=f"{xp:,}", inline=True)
+
+        embed.set_footer(text="WiseOldMan")
+        return embed
 
     @staticmethod
     def _clean(value: str | None) -> str:
@@ -544,9 +769,7 @@ class ChatEventsService(Service):
             color=discord.Color.dark_red(),
         )
         embed.set_author(name="Hardcore Ironman Death")
-        embed.set_thumbnail(
-            url=f"{_WIKI_BASE}/Hardcore_ironman_chat_badge.png"
-        )
+        embed.set_thumbnail(url=f"{_WIKI_BASE}/Hardcore_ironman_chat_badge.png")
         return embed
 
     # ------------------------------------------------------------------

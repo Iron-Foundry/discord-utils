@@ -1,0 +1,95 @@
+[attack]
+wom_key = "attack"
+aliases = ["att", "atk"]
+
+[strength]
+wom_key = "strength"
+aliases = ["str"]
+
+[defence]
+wom_key = "defence"
+aliases = ["def"]
+
+[ranged]
+wom_key = "ranged"
+aliases = ["range", "ranging", "rng"]
+
+[prayer]
+wom_key = "prayer"
+aliases = ["pray"]
+
+[magic]
+wom_key = "magic"
+aliases = ["mage", "mag"]
+
+[runecrafting]
+wom_key = "runecrafting"
+aliases = ["rc", "rune", "runecraft"]
+
+[construction]
+wom_key = "construction"
+aliases = ["con", "construct"]
+
+[hitpoints]
+wom_key = "hitpoints"
+aliases = ["hp", "health", "hit", "hitpoint"]
+
+[agility]
+wom_key = "agility"
+aliases = ["agi", "agil"]
+
+[herblore]
+wom_key = "herblore"
+aliases = ["herb", "hl"]
+
+[thieving]
+wom_key = "thieving"
+aliases = ["thief", "thiev", "thieve"]
+
+[crafting]
+wom_key = "crafting"
+aliases = ["craft"]
+
+[fletching]
+wom_key = "fletching"
+aliases = ["fletch"]
+
+[slayer]
+wom_key = "slayer"
+aliases = ["slay"]
+
+[hunter]
+wom_key = "hunter"
+aliases = ["hunt"]
+
+[mining]
+wom_key = "mining"
+aliases = ["mine"]
+
+[smithing]
+wom_key = "smithing"
+aliases = ["smith"]
+
+[fishing]
+wom_key = "fishing"
+aliases = ["fish"]
+
+[cooking]
+wom_key = "cooking"
+aliases = ["cook"]
+
+[firemaking]
+wom_key = "firemaking"
+aliases = ["fm", "fire"]
+
+[woodcutting]
+wom_key = "woodcutting"
+aliases = ["wc", "wood", "woodcut"]
+
+[farming]
+wom_key = "farming"
+aliases = ["farm"]
+
+[overall]
+wom_key = "overall"
+aliases = ["all", "total"]

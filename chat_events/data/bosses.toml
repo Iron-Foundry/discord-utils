@@ -1,0 +1,297 @@
+# WOM key is also the section key unless overridden.
+# display = pretty name shown in embeds.
+# aliases = extra query strings that resolve to this boss.
+# Team-size raid variants all map to the base WOM key.
+# Awakened variants map to the regular boss WOM key.
+
+[abyssal_sire]
+display = "Abyssal Sire"
+aliases = ["sire"]
+
+[alchemical_hydra]
+display = "Alchemical Hydra"
+aliases = ["hydra"]
+
+[amoxliatl]
+display = "Amoxliatl"
+aliases = ["amox"]
+
+[araxxor]
+display = "Araxxor"
+aliases = []
+
+[artio]
+display = "Artio"
+aliases = []
+
+[barrows_chests]
+display = "Barrows"
+aliases = ["barrows"]
+
+[bryophyta]
+display = "Bryophyta"
+aliases = ["bryo"]
+
+[callisto]
+display = "Callisto"
+aliases = []
+
+[calvarion]
+display = "Calvar'ion"
+aliases = ["calv", "calvarion"]
+
+[cerberus]
+display = "Cerberus"
+aliases = ["cerb"]
+
+[chambers_of_xeric]
+display = "Chambers of Xeric"
+aliases = [
+  "cox", "xeric", "chambers", "olm", "raids", "raids1",
+  "cox solo", "cox duo", "cox trio", "cox 5", "cox 10",
+  "cox 15", "cox 20", "cox 24+",
+]
+
+[chambers_of_xeric_challenge_mode]
+display = "CoX: Challenge Mode"
+aliases = [
+  "cox cm", "xeric cm", "chambers cm", "olm cm", "raids cm",
+  "chambers of xeric - challenge mode",
+  "cox cm solo", "cox cm duo", "cox cm trio", "cox cm 5",
+  "cox cm 24+",
+]
+
+[chaos_elemental]
+display = "Chaos Elemental"
+aliases = ["chaos ele", "ce"]
+
+[chaos_fanatic]
+display = "Chaos Fanatic"
+aliases = ["cf"]
+
+[commander_zilyana]
+display = "Commander Zilyana"
+aliases = ["sara", "saradomin", "zilyana", "zily"]
+
+[corporeal_beast]
+display = "Corporeal Beast"
+aliases = ["corp"]
+
+[crazy_archaeologist]
+display = "Crazy Archaeologist"
+aliases = ["crazy arch", "ca"]
+
+[dagannoth_prime]
+display = "Dagannoth Prime"
+aliases = ["prime"]
+
+[dagannoth_rex]
+display = "Dagannoth Rex"
+aliases = ["rex"]
+
+[dagannoth_supreme]
+display = "Dagannoth Supreme"
+aliases = ["supreme"]
+
+[deranged_archaeologist]
+display = "Deranged Archaeologist"
+aliases = ["deranged arch", "da"]
+
+[duke_sucellus]
+display = "Duke Sucellus"
+aliases = ["duke", "duke awakened", "duke sucellus awakened"]
+
+[general_graardor]
+display = "General Graardor"
+aliases = ["bando", "bandos", "graardor"]
+
+[giant_mole]
+display = "Giant Mole"
+aliases = ["mole"]
+
+[grotesque_guardians]
+display = "Grotesque Guardians"
+aliases = ["dusk", "dawn", "gargs", "ggs", "gg"]
+
+[guardians_of_the_rift]
+display = "Guardians of the Rift"
+wom_section = "activities"
+aliases = ["gotr", "runetodt", "rifts closed"]
+
+[herbiboar]
+display = "Herbiboar"
+wom_section = "activities"
+aliases = ["herbi"]
+
+[hespori]
+display = "Hespori"
+aliases = ["hesp"]
+
+[kalphite_queen]
+display = "Kalphite Queen"
+aliases = ["kq"]
+
+[king_black_dragon]
+display = "King Black Dragon"
+aliases = ["kbd"]
+
+[kraken]
+display = "Kraken"
+aliases = ["krak"]
+
+[kree_arra]
+display = "Kree'arra"
+aliases = ["arma", "kree", "kreearra", "armadyl"]
+
+[kril_tsutsaroth]
+display = "K'ril Tsutsaroth"
+aliases = ["zammy", "zamorak", "kril", "kril trutsaroth"]
+
+[lunar_chests]
+display = "Lunar Chest"
+aliases = ["lunar chests", "moons of peril", "perilous moon", "perilous moons", "moons"]
+
+[mimic]
+display = "Mimic"
+aliases = []
+
+[nex]
+display = "Nex"
+aliases = []
+
+[nightmare]
+display = "Nightmare"
+aliases = ["nm", "tnm", "nmare", "the nightmare"]
+
+[obor]
+display = "Obor"
+aliases = []
+
+[phantom_muspah]
+display = "Phantom Muspah"
+aliases = ["phantom", "muspah", "pm"]
+
+[phosanis_nightmare]
+display = "Phosani's Nightmare"
+aliases = [
+  "pnm", "phosani", "phosanis",
+  "phosani nm", "phosani nightmare", "phosanis nightmare",
+]
+
+[scurrius]
+display = "Scurrius"
+aliases = ["scurry"]
+
+[skotizo]
+display = "Skotizo"
+aliases = ["skotoz"]
+
+[sol_heredit]
+display = "Sol Heredit"
+aliases = ["sol", "colo", "colosseum", "fortis colosseum"]
+
+[spindel]
+display = "Spindel"
+aliases = []
+
+[tempoross]
+display = "Tempoross"
+aliases = ["fishingtodt", "fishtodt", "temp"]
+
+[the_corrupted_gauntlet]
+display = "The Corrupted Gauntlet"
+aliases = ["cg", "cgaunt", "cgauntlet", "the corrupted gauntlet"]
+
+[the_gauntlet]
+display = "The Gauntlet"
+aliases = ["gaunt", "the gauntlet"]
+
+[the_hueycoatl]
+display = "The Hueycoatl"
+aliases = ["huey", "the hueycoatl"]
+
+[the_leviathan]
+display = "The Leviathan"
+aliases = [
+  "levi", "the leviathan",
+  "levi awakened", "leviathan awakened", "the leviathan awakened",
+]
+
+[the_whisperer]
+display = "The Whisperer"
+aliases = [
+  "wisp", "whisp", "the whisperer",
+  "wisp awakened", "whisp awakened", "whisperer awakened",
+]
+
+[theatre_of_blood]
+display = "Theatre of Blood"
+aliases = [
+  "tob", "theatre", "verzik", "verzik vitur", "raids 2",
+  "tob solo", "tob duo", "tob trio", "tob 4", "tob 5",
+  "tob sm", "tob story mode", "tob story",
+  "tob entry mode", "tob em", "tob entry",
+]
+
+[theatre_of_blood_hard_mode]
+display = "ToB: Hard Mode"
+aliases = [
+  "tob cm", "tob hm", "tob hard mode", "tob hard", "hmt",
+  "hmt solo", "hmt duo", "hmt trio",
+]
+
+[thermonuclear_smoke_devil]
+display = "Thermonuclear Smoke Devil"
+aliases = ["smoke devil", "thermy", "tsd"]
+
+[tombs_of_amascut]
+display = "Tombs of Amascut"
+aliases = [
+  "toa", "tombs", "amascut", "warden", "wardens", "raids 3",
+  "toa solo", "toa duo", "toa trio", "toa 4", "toa 5",
+  "toa entry", "toa entry mode", "tombs of amascut - entry",
+  "toa entry solo", "toa entry duo",
+]
+
+[tombs_of_amascut_expert_mode]
+display = "ToA: Expert Mode"
+aliases = [
+  "toa expert", "toa expert mode", "tombs of amascut - expert",
+  "toa expert solo", "toa expert duo",
+]
+
+[tztok_jad]
+display = "TzTok-Jad"
+aliases = ["jad", "tzhaar fight cave", "fight cave", "fight caves", "fightcaves"]
+
+[tzkal_zuk]
+display = "TzKal-Zuk"
+aliases = ["zuk", "inferno"]
+
+[vardorvis]
+display = "Vardorvis"
+aliases = ["vard", "vard awakened", "vardorvis awakened"]
+
+[venenatis]
+display = "Venenatis"
+aliases = ["vene"]
+
+[vetion]
+display = "Vet'ion"
+aliases = ["vetion", "vet"]
+
+[vorkath]
+display = "Vorkath"
+aliases = ["vork"]
+
+[wintertodt]
+display = "Wintertodt"
+aliases = ["wt", "todt"]
+
+[zalcano]
+display = "Zalcano"
+aliases = ["zalc"]
+
+[zulrah]
+display = "Zulrah"
+aliases = []
