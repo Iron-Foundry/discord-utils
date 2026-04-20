@@ -16,7 +16,7 @@ _ACCESS_BADGES = {
 
 def _groups_embed(groups: list[HelpGroup]) -> discord.Embed:
     embed = discord.Embed(
-        title="The Foundry — Available Commands",
+        title="The Foundry - Available Commands",
         description="Use `/help <group>` to see commands in a specific group.",
         color=discord.Color.blurple(),
     )
@@ -27,7 +27,7 @@ def _groups_embed(groups: list[HelpGroup]) -> discord.Embed:
 
 def _group_embed(group: HelpGroup) -> discord.Embed:
     embed = discord.Embed(
-        title=f"Commands — {group.name}",
+        title=f"Commands - {group.name}",
         description=group.description,
         color=discord.Color.blurple(),
     )

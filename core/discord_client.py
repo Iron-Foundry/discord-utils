@@ -49,7 +49,7 @@ class DiscordClient(discord.Client):
         )
 
         if not pg_uri:
-            logger.error("DATABASE_URL not set — no services will start")
+            logger.error("DATABASE_URL not set - no services will start")
             return
 
         from core.db.engine import ensure_tables, init_engine
@@ -86,7 +86,7 @@ class DiscordClient(discord.Client):
             return
         logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
 
-        # fetch_guild() (used in setup_hook) returns a static REST snapshot —
+        # fetch_guild() (used in setup_hook) returns a static REST snapshot -
         # it has no cached members and doesn't update from gateway events.
         # Replace it with the live gateway-managed guild now that we're connected.
         if self._guild:

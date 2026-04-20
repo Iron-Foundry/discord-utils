@@ -89,7 +89,7 @@ class TempVCService(Service):
         return channel
 
     async def handle_trigger_deleted(self, channel_id: int) -> None:
-        """Called when a channel is deleted — recreates trigger if it was deleted."""
+        """Called when a channel is deleted - recreates trigger if it was deleted."""
         if self._config is None or self._config.trigger_channel_id != channel_id:
             return
         self._config.trigger_channel_id = None

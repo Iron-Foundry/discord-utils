@@ -12,7 +12,7 @@ class Service(ABC):
 
     Provides a concrete ``guild`` property backed by ``_guild``, so subclasses
     only need to set ``self._guild`` in their ``__init__``.  The two lifecycle
-    hooks — ``initialize`` and ``post_ready`` — define the contract the
+    hooks - ``initialize`` and ``post_ready`` - define the contract the
     :class:`ServiceHandler` relies on.
     """
 

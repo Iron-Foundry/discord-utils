@@ -11,7 +11,7 @@ fonts, and icon assets. Consumed by the `/otw` command in `command_infra/`.
 |---|---|
 | `canvas.py` | Creates and exports the final PIL image |
 | `drawing.py` | Low-level drawing helpers (text, shapes, borders) |
-| `layouts.py` | Layout definitions — positions and sizes for each OTW card type |
+| `layouts.py` | Layout definitions - positions and sizes for each OTW card type |
 | `models.py` | Pydantic models for OTW data passed into the generator |
 | `fonts.py` | Font loading and caching |
 | `icons.py` | Icon asset loading |

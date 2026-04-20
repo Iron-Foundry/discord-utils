@@ -1,4 +1,4 @@
-"""Role-all command — assign a role to all (or filtered) guild members."""
+"""Role-all command - assign a role to all (or filtered) guild members."""
 
 from __future__ import annotations
 
@@ -122,7 +122,7 @@ def make_roleall_command() -> app_commands.Command:  # type: ignore[type-arg]
         eta = _format_duration(math.ceil(len(targets) / _ROLE_ASSIGN_RATE))
         await interaction.followup.send(
             f"Assigning **{role.name}** to **{len(targets)}** member(s) "
-            f"— estimated time: **{eta}**."
+            f"- estimated time: **{eta}**."
         )
 
         succeeded, failed = await _assign_role_to_all(targets, role)

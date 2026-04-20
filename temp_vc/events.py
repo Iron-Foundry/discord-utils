@@ -50,7 +50,7 @@ class TempVCConfigureModal(discord.ui.Modal, title="Configure Your Channel"):
             user_limit = 0
 
         logger.debug(
-            f"TempVC: configure modal submitted — name={name!r}, limit={user_limit}"
+            f"TempVC: configure modal submitted - name={name!r}, limit={user_limit}"
         )
         await self._service.configure_channel(self._channel_id, name, user_limit)
         await interaction.response.defer()
@@ -96,7 +96,7 @@ class TempVCDMView(discord.ui.View):
                 break
 
     # ------------------------------------------------------------------
-    # Auto — keep the channel as-is
+    # Auto - keep the channel as-is
     # ------------------------------------------------------------------
 
     @discord.ui.button(label="Auto", style=discord.ButtonStyle.green)
@@ -110,7 +110,7 @@ class TempVCDMView(discord.ui.View):
         self.stop()
 
     # ------------------------------------------------------------------
-    # Configure — rename / set user limit via modal
+    # Configure - rename / set user limit via modal
     # ------------------------------------------------------------------
 
     @discord.ui.button(label="Configure", style=discord.ButtonStyle.blurple)
@@ -133,7 +133,7 @@ class TempVCDMView(discord.ui.View):
         self.stop()
 
     # ------------------------------------------------------------------
-    # Privacy toggle — make the channel private or public
+    # Privacy toggle - make the channel private or public
     # ------------------------------------------------------------------
 
     @discord.ui.button(

@@ -1,4 +1,4 @@
-# Iron Foundry — Discord Utils
+# Iron Foundry - Discord Utils
 
 Utility bot for the Iron Foundry OSRS clan. Handles temporary voice channels and
 clan content image generation.
@@ -50,7 +50,7 @@ All configuration is read from a `.env` file in the project root.
 | Variable | Default | Description |
 |---|---|---|
 | `MONGO_DB_NAME` | `foundry` | MongoDB database name. Must match `discord-server`. |
-| `DEBUG_MODE` | — | Set to any truthy value to enable debug logging. |
+| `DEBUG_MODE` | - | Set to any truthy value to enable debug logging. |
 
 ---
 
@@ -89,15 +89,15 @@ All three content parameters support autocomplete. At least one must be provided
 
 ```
 core/
-  discord_client.py   — DiscordClient: event handling and startup orchestration
-  service_loader.py   — async functions that initialise each service; OTW registered after
-  command_handler.py  — CommandHandler singleton, owns the slash-command tree
-  config.py           — ConfigInterface, env-var access
+  discord_client.py   - DiscordClient: event handling and startup orchestration
+  service_loader.py   - async functions that initialise each service; OTW registered after
+  command_handler.py  - CommandHandler singleton, owns the slash-command tree
+  config.py           - ConfigInterface, env-var access
 
-temp_vc/              — Temporary voice channel service and repository
-imagegen/             — PIL-based image renderer for OTW images
-  assets/             — Fonts, skill/boss icons, and background image
-commands/             — Slash command definitions
+temp_vc/              - Temporary voice channel service and repository
+imagegen/             - PIL-based image renderer for OTW images
+  assets/             - Fonts, skill/boss icons, and background image
+commands/             - Slash command definitions
 ```
 
 On startup `setup_hook` calls `load_all_services`, which initialises the TempVC

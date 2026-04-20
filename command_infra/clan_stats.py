@@ -1,4 +1,4 @@
-"""Clan stats command — shows CC rank distribution as a Plotly bar chart."""
+"""Clan stats command - shows CC rank distribution as a Plotly bar chart."""
 
 from __future__ import annotations
 

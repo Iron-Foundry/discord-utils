@@ -208,7 +208,7 @@ class ChatEventsService(Service):
                 "ChatEventsService: consumer group '{}' created", CONSUMER_GROUP
             )
         except Exception as exc:
-            # BUSYGROUP means the group already exists — that's fine
+            # BUSYGROUP means the group already exists - that's fine
             if "BUSYGROUP" in str(exc):
                 logger.debug(
                     "ChatEventsService: consumer group '{}' already exists",
@@ -281,7 +281,7 @@ class ChatEventsService(Service):
         if not self._config or not self._config.channel_id:
             logger.warning(
                 "ChatEventsService: no channel configured, dropping '{}' event"
-                " — run /chatevents setchannel",
+                " - run /chatevents setchannel",
                 event_type,
             )
             return
@@ -308,7 +308,10 @@ class ChatEventsService(Service):
         data: dict[str, Any],
         channel: discord.TextChannel | discord.Thread,
     ) -> bool:
-        """Intercept !kc / !level / !lvl. Returns True if the message was a command."""
+        """Intercept !kc / !level / !lvl / !total / !clues.
+
+        Returns True if the message was a command.
+        """
         raw: str = data.get("raw_message", "").strip()
         parts = raw.split(None, 1)
         if not parts:
@@ -317,7 +320,11 @@ class ChatEventsService(Service):
         cmd = parts[0].lower()
         arg = parts[1].strip() if len(parts) > 1 else ""
 
-        if cmd not in ("!kc", "!level", "!lvl", "!clues") or not arg:
+        # !total is a no-argument shorthand for !level overall
+        if cmd == "!total":
+            arg = "overall"
+            cmd = "!level"
+        elif cmd not in ("!kc", "!level", "!lvl", "!clues") or not arg:
             return False
 
         rsn = self._clean(data.get("player_name", ""))
@@ -384,7 +391,7 @@ class ChatEventsService(Service):
         ehb: float = entry.get("ehb") or 0.0
 
         embed = discord.Embed(color=discord.Color.dark_gold())
-        embed.set_author(name=f"{display_name} KC — {display_rsn}")
+        embed.set_author(name=f"{display_name} KC - {display_rsn}")
 
         if count < 0:
             embed.description = "No kills recorded on WiseOldMan."
@@ -432,7 +439,7 @@ class ChatEventsService(Service):
         embed.set_footer(text="WiseOldMan")
 
         if wom_key == "clue_scrolls_all":
-            embed.set_author(name=f"Clue Scrolls — {display_rsn}")
+            embed.set_author(name=f"Clue Scrolls - {display_rsn}")
             for tier_key, tier_label in all_clue_tiers():
                 data: dict[str, Any] = activities.get(tier_key) or {}
                 score: int = data.get("score") or 0
@@ -442,7 +449,7 @@ class ChatEventsService(Service):
                     inline=True,
                 )
         else:
-            embed.set_author(name=f"{display_name} — {display_rsn}")
+            embed.set_author(name=f"{display_name} - {display_rsn}")
             data = activities.get(wom_key) or {}
             score = data.get("score") or -1
             rank: int = data.get("rank") or -1
@@ -489,7 +496,7 @@ class ChatEventsService(Service):
         rank: int = skill_data.get("rank") or -1
 
         embed = discord.Embed(color=discord.Color.blue())
-        embed.set_author(name=f"{display_skill} — {display_rsn}")
+        embed.set_author(name=f"{display_skill} - {display_rsn}")
         embed.set_thumbnail(url=_wiki_skill_icon_url(display_skill))
 
         if level < 0:

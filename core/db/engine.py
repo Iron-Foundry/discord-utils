@@ -23,7 +23,7 @@ def init_engine(pg_uri: str) -> None:
 
 def get_session_factory() -> async_sessionmaker[AsyncSession]:
     if _session_factory is None:
-        raise RuntimeError("DB engine not initialised — call init_engine() first")
+        raise RuntimeError("DB engine not initialised - call init_engine() first")
     return _session_factory
 
 
@@ -34,7 +34,7 @@ async def ensure_tables() -> None:
     Skips the shared `users` table (owned by api-backend / Alembic).
     """
     if _engine is None:
-        raise RuntimeError("DB engine not initialised — call init_engine() first")
+        raise RuntimeError("DB engine not initialised - call init_engine() first")
     async with _engine.begin() as conn:
         await conn.run_sync(
             Base.metadata.create_all,

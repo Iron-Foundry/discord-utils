@@ -1,4 +1,4 @@
-"""Test event command — manually insert a fake event row for a member."""
+"""Test event command - manually insert a fake event row for a member."""
 
 from __future__ import annotations
 
@@ -163,7 +163,7 @@ def make_test_event_command() -> app_commands.Command:  # type: ignore[type-arg]
         rsn = await _get_rsn(member.id)
         if not rsn:
             await interaction.followup.send(
-                f"{member.mention} has no linked RSN — link one first via `/settings`.",
+                f"{member.mention} has no linked RSN - link one first via `/settings`.",
                 ephemeral=True,
             )
             return
@@ -217,7 +217,7 @@ def register_help(registry: HelpRegistry) -> None:
     registry.add_group(
         HelpGroup(
             name="testevent",
-            description="Dev tool — insert fake events for feed testing",
+            description="Dev tool - insert fake events for feed testing",
             commands=[
                 HelpEntry(
                     "/testevent <member> <type> [name] [value] [source]",
