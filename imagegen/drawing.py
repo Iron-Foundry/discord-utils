@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 
 def resize_keep_aspect(icon: Image.Image, target_size: tuple[int, int]) -> Image.Image:
@@ -113,7 +113,7 @@ def draw_underlined_text(
     draw: ImageDraw.ImageDraw,
     xy: tuple[float, float],
     text: str,
-    font: object,
+    font: ImageFont.ImageFont | ImageFont.FreeTypeFont | ImageFont.TransposedFont,
     fill: tuple[int, int, int],
     anchor: str = "mm",
     underline_offset: int = 8,

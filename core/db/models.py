@@ -37,9 +37,7 @@ class TempVCUserSettings(Base):
     private: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    whitelist: Mapped[list] = mapped_column(
-        JSONB, nullable=False, server_default="[]"
-    )
+    whitelist: Mapped[list] = mapped_column(JSONB, nullable=False, server_default="[]")
 
 
 class ClanEventsConfig(Base):
@@ -56,7 +54,9 @@ class Event(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     type: Mapped[str] = mapped_column(Text, nullable=False)
-    timestamp: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False
+    )
     player_name: Mapped[str | None] = mapped_column(Text)
     sender: Mapped[str | None] = mapped_column(Text)
     is_league_world: Mapped[bool] = mapped_column(

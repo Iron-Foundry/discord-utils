@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
@@ -33,7 +32,9 @@ class PgTempVCRepository:
             guild_id=row.guild_id,
             trigger_channel_id=row.trigger_channel_id,
             trigger_channel_category_id=row.trigger_channel_category_id,
-            active_channels={int(k): int(v) for k, v in (row.active_channels or {}).items()},
+            active_channels={
+                int(k): int(v) for k, v in (row.active_channels or {}).items()
+            },
         )
 
     async def save_config(self, config: TempVCConfig) -> None:
@@ -50,7 +51,9 @@ class PgTempVCRepository:
                 set_={
                     "trigger_channel_id": config.trigger_channel_id,
                     "trigger_channel_category_id": config.trigger_channel_category_id,
-                    "active_channels": {str(k): v for k, v in config.active_channels.items()},
+                    "active_channels": {
+                        str(k): v for k, v in config.active_channels.items()
+                    },
                 },
             )
         )

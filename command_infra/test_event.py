@@ -13,18 +13,18 @@ from command_infra.checks import handle_check_failure, is_senior_staff
 from command_infra.help_registry import HelpEntry, HelpGroup, HelpRegistry
 
 _EVENT_TYPES = [
-    app_commands.Choice(name="Drop (loot)",          value="loot"),
-    app_commands.Choice(name="Level Up",             value="level"),
-    app_commands.Choice(name="XP Milestone",         value="xp_milestone"),
-    app_commands.Choice(name="Quest",                value="quest"),
-    app_commands.Choice(name="Diary",                value="diary"),
-    app_commands.Choice(name="Combat Achievement",   value="combat_achievement"),
-    app_commands.Choice(name="Pet",                  value="pet"),
-    app_commands.Choice(name="Collection Log",       value="collection_log"),
-    app_commands.Choice(name="Clue Item",            value="clue_item"),
-    app_commands.Choice(name="Personal Best",        value="personal_best"),
-    app_commands.Choice(name="HCIM Death",           value="hcim_death"),
-    app_commands.Choice(name="Loot Key",             value="loot_key"),
+    app_commands.Choice(name="Drop (loot)", value="loot"),
+    app_commands.Choice(name="Level Up", value="level"),
+    app_commands.Choice(name="XP Milestone", value="xp_milestone"),
+    app_commands.Choice(name="Quest", value="quest"),
+    app_commands.Choice(name="Diary", value="diary"),
+    app_commands.Choice(name="Combat Achievement", value="combat_achievement"),
+    app_commands.Choice(name="Pet", value="pet"),
+    app_commands.Choice(name="Collection Log", value="collection_log"),
+    app_commands.Choice(name="Clue Item", value="clue_item"),
+    app_commands.Choice(name="Personal Best", value="personal_best"),
+    app_commands.Choice(name="HCIM Death", value="hcim_death"),
+    app_commands.Choice(name="Loot Key", value="loot_key"),
 ]
 
 
