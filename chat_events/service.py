@@ -30,6 +30,7 @@ _WOM_BASE = "https://api.wiseoldman.net/v2"
 _WOM_HEADERS = {"User-Agent": "IronFoundry/1.0"}
 
 _IMG_TAG_RE = re.compile(r"<img=\d+>\s*")
+_CA_ID_RE = re.compile(r"CA_ID:\d+\|")
 _LEAGUES_IMG_TAG_RE = re.compile(r"<img=22>")
 
 _WIKI_BASE = "https://oldschool.runescape.wiki/images"
@@ -523,6 +524,15 @@ class ChatEventsService(Service):
         return _IMG_TAG_RE.sub("", value).strip()
 
     @staticmethod
+    def _strip_broadcast(value: str | None) -> str:
+        """Strip CA_ID prefixes and image tags from a raw broadcast message."""
+        if not value:
+            return ""
+        value = _CA_ID_RE.sub("", value)
+        value = _IMG_TAG_RE.sub("", value)
+        return value.strip()
+
+    @staticmethod
     def _is_leagues(data: dict[str, Any]) -> bool:
         """Return True if the event originated from a Leagues world."""
         if data.get("is_league_world"):
@@ -551,6 +561,7 @@ class ChatEventsService(Service):
             "coffer_donation": self._coffer_donation_embed,
             "coffer_withdrawal": self._coffer_withdrawal_embed,
             "hcim_death": self._hcim_death_embed,
+            "unknown": self._unknown_embed,
         }
         builder = builders.get(event_type)
         if builder is None:
@@ -777,6 +788,15 @@ class ChatEventsService(Service):
         )
         embed.set_author(name="Hardcore Ironman Death")
         embed.set_thumbnail(url=f"{_WIKI_BASE}/Hardcore_ironman_chat_badge.png")
+        return embed
+
+    def _unknown_embed(self, data: dict[str, Any]) -> discord.Embed:
+        raw = self._strip_broadcast(data.get("raw_message", ""))
+        embed = discord.Embed(
+            description=raw or "*(empty)*",
+            color=discord.Color.greyple(),
+        )
+        embed.set_author(name="Unrecognised Broadcast")
         return embed
 
     # ------------------------------------------------------------------
