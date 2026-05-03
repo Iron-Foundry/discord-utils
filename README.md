@@ -50,7 +50,7 @@ All configuration is read from a `.env` file in the project root.
 | Variable | Default | Description |
 |---|---|---|
 | `VALKEY_URI` | `redis://localhost:6379` | Valkey/Redis connection string. |
-| `DEBUG_MODE` | — | Enable debug logging. |
+| `DEBUG_MODE` | - | Enable debug logging. |
 
 ---
 
@@ -58,7 +58,7 @@ All configuration is read from a `.env` file in the project root.
 
 | Group | Description |
 |---|---|
-| `/tempvc` | Configure temporary voice channels — trigger channel setup and GIM group management. |
+| `/tempvc` | Configure temporary voice channels - trigger channel setup and GIM group management. |
 | `/otw` | Generate a styled OSRS Of The Week image for one, two, or three categories. |
 | `/chatevents` | Configure the channel for clan event and chat relay messages. |
 
