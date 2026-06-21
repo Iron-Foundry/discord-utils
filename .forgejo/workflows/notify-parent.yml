@@ -1,0 +1,19 @@
+name: Notify parent repo
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger parent update
+        run: |
+          curl -sf -X POST \
+            -H "Authorization: token ${{ secrets.SUBMODULE_PAT }}" \
+            -H "Content-Type: application/json" \
+            -d '{"event_type": "submodule-updated", "client_payload": {"submodule": "discord-utils"}}' \
+            https://codeberg.org/api/v1/repos/IronFoundry/Foundry-Project/dispatches
