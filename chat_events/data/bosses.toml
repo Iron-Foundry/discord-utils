@@ -151,6 +151,10 @@ aliases = ["zammy", "zamorak", "kril", "kril trutsaroth"]
 display = "Lunar Chest"
 aliases = ["lunar chests", "moons of peril", "perilous moon", "perilous moons", "moons"]
 
+[maggot_king]
+display = "Maggot King"
+aliases = ["maggot"]
+
 [mimic]
 display = "Mimic"
 aliases = []
