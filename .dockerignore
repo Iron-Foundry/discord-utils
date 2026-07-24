@@ -1,13 +1,30 @@
+# Python bytecode and caches (recursive)
+**/__pycache__/
+**/*.py[cod]
 .venv/
-__pycache__/
-*.pyc
-*.pyo
+**/.mypy_cache/
+**/.ruff_cache/
+**/.pytest_cache/
+.coverage
+htmlcov/
+
+# VCS, editor, OS cruft
 .git/
 .gitignore
+.dockerignore
+.vscode/
+.idea/
+**/.DS_Store
+Thumbs.db
+
+# Secrets
 .env
 .env.*
 !.env.example
-.mypy_cache/
-.ruff_cache/
-.pytest_cache/
+
+# Docs and container defs
+*.md
+Dockerfile
+
+# Tests
 tests/
