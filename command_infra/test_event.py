@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from typing import Any
 
 import discord
 from discord import app_commands
@@ -34,7 +35,7 @@ def _build_data(
     value: int | None,
     source: str | None,
     player_name: str,
-) -> dict:
+) -> dict[str, Any]:
     """Build a minimal data payload for the given event type."""
     match event_type:
         case "loot":
@@ -113,7 +114,7 @@ async def _insert_event(
     event_type: str,
     player_name: str,
     user_id: int,
-    data: dict,
+    data: dict[str, Any],
 ) -> int:
     """Insert an event row and return its new id."""
     from core.db.engine import get_session_factory
@@ -134,7 +135,7 @@ async def _insert_event(
     return event_id
 
 
-def make_test_event_command() -> app_commands.Command:  # type: ignore[type-arg]
+def make_test_event_command() -> app_commands.Command[Any, Any, Any]:
     """Return a ready-to-add /testevent slash command."""
 
     @app_commands.command(
@@ -209,7 +210,7 @@ def make_test_event_command() -> app_commands.Command:  # type: ignore[type-arg]
         else:
             await interaction.response.send_message(msg, ephemeral=True)
 
-    return testevent  # type: ignore[return-value]
+    return testevent
 
 
 def register_help(registry: HelpRegistry) -> None:

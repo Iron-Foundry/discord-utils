@@ -25,7 +25,7 @@ class CanvasLayout:
     pad_x: int
     pad_y: int
     _colors: dict[ColorKey, RGBTuple] = field(
-        default_factory=lambda: {key: (0, 0, 0) for key in ColorKey}
+        default_factory=lambda: dict.fromkeys(ColorKey, (0, 0, 0))
     )
     _date_location: int = field(init=False)
     _otw_text_height: int = field(init=False)
@@ -43,10 +43,6 @@ class CanvasLayout:
     @colors.setter
     def colors(self, value: tuple[ColorKey, RGBTuple]) -> None:
         key, rgb = value
-        if not isinstance(rgb, tuple) or len(rgb) != 3:
-            raise TypeError(f"Expected RGB tuple of 3 ints, got {rgb!r}")
-        if not all(isinstance(c, int) for c in rgb):
-            raise TypeError(f"Expected RGB tuple of 3 ints, got {rgb!r}")
         if key not in self._colors:
             raise KeyError(f"Invalid color key: {key!r}")
         self._colors[key] = rgb

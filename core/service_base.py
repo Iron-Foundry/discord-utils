@@ -31,7 +31,7 @@ class Service(ABC):
     async def initialize(self) -> None:
         """Called during ``setup_hook`` to initialise the service."""
 
-    async def post_ready(self) -> None:
+    async def post_ready(self) -> None:  # noqa: B027 - optional hook, not required
         """Called after ``on_ready`` with the live guild cache.
 
         Override when the service needs the fully-populated gateway guild

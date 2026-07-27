@@ -4,7 +4,7 @@ import asyncio
 import hashlib
 import json
 import re
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from urllib.parse import quote
 
 import discord
@@ -22,9 +22,6 @@ from chat_events.lookups import (
 from chat_events.models import ClanEventsConfig
 from chat_events.repository import PgChatEventsRepository
 from core.service_base import Service
-
-if TYPE_CHECKING:
-    pass
 
 _WOM_BASE = "https://api.wiseoldman.net/v2"
 _WOM_HEADERS = {"User-Agent": "IronFoundry/1.0"}
@@ -186,7 +183,8 @@ class ChatEventsService(Service):
 
     async def set_channel(self, channel_id: int) -> None:
         """Persist the configured Discord channel."""
-        assert self._config is not None
+        if self._config is None:
+            raise RuntimeError("ChatEventsService: config not loaded")
         self._config.channel_id = channel_id
         await self._repo.save_config(self._config)
 
@@ -240,7 +238,7 @@ class ChatEventsService(Service):
             except asyncio.CancelledError:
                 logger.info("ChatEventsService: consumer task cancelled")
                 return
-            except (TimeoutError, ValkeyTimeoutError):
+            except TimeoutError, ValkeyTimeoutError:
                 continue
             except Exception as exc:
                 logger.error("ChatEventsService: consumer error: {}", exc)
@@ -355,7 +353,7 @@ class ChatEventsService(Service):
             if resp.status_code == 404:
                 return None
             resp.raise_for_status()
-            return resp.json()  # type: ignore[no-any-return]
+            return resp.json()
         except Exception:
             logger.exception("ChatEventsService: WOM fetch failed for {}", rsn)
             return None

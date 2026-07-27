@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import io
+from typing import Any
 
 import discord
 import plotly.graph_objects as go
@@ -38,7 +39,7 @@ def _compute_median_rank(rank_names: list[str], counts: list[int]) -> str:
         return "N/A"
     target = total / 2
     cumulative = 0
-    for name, count in zip(rank_names, counts):
+    for name, count in zip(rank_names, counts, strict=False):
         cumulative += count
         if cumulative >= target:
             return name
@@ -64,7 +65,7 @@ async def _build_chart(
             textfont={"color": _TEXT},
         )
     )
-    fig.update_layout(  # type: ignore[call-arg]
+    fig.update_layout(
         paper_bgcolor=_BG,
         plot_bgcolor=_BG,
         font={"color": _TEXT, "family": "Arial, sans-serif"},
@@ -112,7 +113,7 @@ def _build_embed(
     embed.add_field(name="Total ranked members", value=str(total), inline=False)
 
     lines: list[str] = []
-    for name, count in zip(rank_names, counts):
+    for name, count in zip(rank_names, counts, strict=False):
         pct = f"{count / total * 100:.1f}%" if total > 0 else "0.0%"
         lines.append(f"**{name}:** {count} ({pct})")
     embed.add_field(name="Per-rank breakdown", value="\n".join(lines), inline=False)
@@ -141,7 +142,7 @@ def _build_embed(
     return embed
 
 
-def make_clan_stats_command() -> app_commands.Command:  # type: ignore[type-arg]
+def make_clan_stats_command() -> app_commands.Command[Any, Any, Any]:
     """Return a ready-to-add /clanstats slash command."""
 
     @app_commands.command(
@@ -174,7 +175,7 @@ def make_clan_stats_command() -> app_commands.Command:  # type: ignore[type-arg]
     ) -> None:
         await handle_check_failure(interaction, error)
 
-    return clanstats  # type: ignore[return-value]
+    return clanstats
 
 
 def register_help(registry: HelpRegistry) -> None:

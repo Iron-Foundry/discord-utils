@@ -1,10 +1,11 @@
-from enum import Enum
+import os
+from enum import StrEnum
+
 from dotenv import load_dotenv
 from loguru import logger
-import os
 
 
-class ConfigVars(str, Enum):
+class ConfigVars(StrEnum):
     """Environment variable keys"""
 
     DISCORD_TOKEN = "DISCORD_TOKEN"
@@ -26,7 +27,7 @@ class ConfigInterface:
         logger.info("Reloading Environment")
         load_dotenv()
 
-    def get_variable(self, variable: "ConfigVars | str") -> str | None:
+    def get_variable(self, variable: ConfigVars | str) -> str | None:
         key = variable.value if isinstance(variable, ConfigVars) else variable
         logger.info(f"Fetching environment variable: {key}")
         return os.getenv(key, None)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import discord
 from discord import app_commands
@@ -72,7 +73,7 @@ async def _assign_role_to_all(
     return succeeded, failed
 
 
-def make_roleall_command() -> app_commands.Command:  # type: ignore[type-arg]
+def make_roleall_command() -> app_commands.Command[Any, Any, Any]:
     """Return a ready-to-add /roleall slash command."""
 
     @app_commands.command(
@@ -146,7 +147,7 @@ def make_roleall_command() -> app_commands.Command:  # type: ignore[type-arg]
     ) -> None:
         await handle_check_failure(interaction, error)
 
-    return roleall  # type: ignore[return-value]
+    return roleall
 
 
 def register_help(registry: HelpRegistry) -> None:

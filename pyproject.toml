@@ -18,3 +18,23 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0.49",
     "valkey>=6.1.1",
 ]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.411",
+    "ruff>=0.16.0",
+]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E4", "E7", "E9", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "PLE",
+    "ASYNC", "DTZ", "LOG", "G", "C4", "RET", "PERF", "PTH", "S",
+]
+allowed-confusables = ["×", "➕", "➖", "’"]
+
+[tool.ruff.lint.per-file-ignores]
+# StrEnum of environment variable names, not credential values.
+"core/config.py" = ["S105"]

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from core.db import engine as db_engine
 from core.db.models import TempVCConfig as TempVCConfigORM

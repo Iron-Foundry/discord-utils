@@ -7,6 +7,7 @@ Must stay in sync with the schema defined in core/db/engine.py.
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import BigInteger, Boolean, Text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -24,7 +25,7 @@ class TempVCConfig(Base):
     guild_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     trigger_channel_id: Mapped[int | None] = mapped_column(BigInteger)
     trigger_channel_category_id: Mapped[int | None] = mapped_column(BigInteger)
-    active_channels: Mapped[dict] = mapped_column(
+    active_channels: Mapped[dict[str, int]] = mapped_column(
         JSONB, nullable=False, server_default="{}"
     )
 
@@ -37,7 +38,9 @@ class TempVCUserSettings(Base):
     private: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    whitelist: Mapped[list] = mapped_column(JSONB, nullable=False, server_default="[]")
+    whitelist: Mapped[list[int]] = mapped_column(
+        JSONB, nullable=False, server_default="[]"
+    )
 
 
 class ClanEventsConfig(Base):
@@ -63,7 +66,9 @@ class Event(Base):
         Boolean, nullable=False, server_default="false"
     )
     raw_message: Mapped[str | None] = mapped_column(Text)
-    data: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default="{}")
+    data: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default="{}"
+    )
     user_id: Mapped[int | None] = mapped_column(BigInteger)
 
 

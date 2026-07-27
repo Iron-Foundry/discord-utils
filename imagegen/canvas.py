@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, ClassVar
 
 from PIL import Image, ImageDraw
 
@@ -15,7 +16,7 @@ BASE_DIR = Path(__file__).parent
 class OTWCanvas:
     """Renders an Of The Week image onto the base background."""
 
-    UNDERLINE_STYLE = {
+    UNDERLINE_STYLE: ClassVar[dict[str, Any]] = {
         "underline_offset": 16,
         "underline_thickness": 2,
         "underline_color": (167, 168, 168),
@@ -147,7 +148,7 @@ class OTWCanvas:
             )
 
         self._draw_date()
-        for entry, slot in zip(entries, self.preset.slots):
+        for entry, slot in zip(entries, self.preset.slots, strict=False):
             self._draw_entry(entry, slot)
 
         return self.base

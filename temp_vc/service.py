@@ -80,7 +80,8 @@ class TempVCService(Service):
         self, category: discord.CategoryChannel
     ) -> discord.VoiceChannel:
         """Create the trigger voice channel in a category and persist it."""
-        assert self._config is not None
+        if self._config is None:
+            raise RuntimeError("TempVCService: config not loaded")
         channel = await category.create_voice_channel(name=TRIGGER_CHANNEL_NAME)
         self._config.trigger_channel_id = channel.id
         self._config.trigger_channel_category_id = category.id
@@ -166,7 +167,8 @@ class TempVCService(Service):
         self, member: discord.Member
     ) -> discord.VoiceChannel | None:
         """Create a default temp VC named after the member and move them in."""
-        assert self._config is not None
+        if self._config is None:
+            raise RuntimeError("TempVCService: config not loaded")
 
         # Determine category from trigger channel
         category: discord.CategoryChannel | None = None
@@ -228,7 +230,8 @@ class TempVCService(Service):
 
     async def cleanup_channel(self, channel_id: int) -> None:
         """Delete an empty temp VC and remove it from the active map."""
-        assert self._config is not None
+        if self._config is None:
+            raise RuntimeError("TempVCService: config not loaded")
         owner_id = self.get_owner_id(channel_id)
         channel = self._guild.get_channel(channel_id)
 

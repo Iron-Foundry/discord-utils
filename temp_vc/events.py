@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING
 
 import discord
@@ -28,7 +29,7 @@ class TempVCConfigureModal(discord.ui.Modal, title="Configure Your Channel"):
         label="User limit (0 = unlimited)",
         required=False,
         max_length=2,
-        placeholder="0–99, leave blank for unlimited",
+        placeholder="0-99, leave blank for unlimited",
     )
 
     def __init__(
@@ -54,10 +55,8 @@ class TempVCConfigureModal(discord.ui.Modal, title="Configure Your Channel"):
         )
         await self._service.configure_channel(self._channel_id, name, user_limit)
         await interaction.response.defer()
-        try:
+        with contextlib.suppress(discord.HTTPException):
             await self._original_msg.edit(content="✅ Channel configured!", view=None)
-        except discord.HTTPException:
-            pass
 
 
 # ---------------------------------------------------------------------------
@@ -101,7 +100,9 @@ class TempVCDMView(discord.ui.View):
 
     @discord.ui.button(label="Auto", style=discord.ButtonStyle.green)
     async def auto(
-        self, interaction: discord.Interaction, button: discord.ui.Button
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button[TempVCDMView],
     ) -> None:
         logger.debug(f"TempVC: Auto selected by {interaction.user}")
         await interaction.response.edit_message(
@@ -115,7 +116,9 @@ class TempVCDMView(discord.ui.View):
 
     @discord.ui.button(label="Configure", style=discord.ButtonStyle.blurple)
     async def configure(
-        self, interaction: discord.Interaction, button: discord.ui.Button
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button[TempVCDMView],
     ) -> None:
         msg = interaction.message
         if msg is None:
@@ -142,7 +145,9 @@ class TempVCDMView(discord.ui.View):
         custom_id="toggle_privacy",
     )
     async def toggle_privacy(
-        self, interaction: discord.Interaction, button: discord.ui.Button
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button[TempVCDMView],
     ) -> None:
         self._private = not self._private
         logger.debug(
@@ -176,12 +181,13 @@ def register(service: TempVCService, client: DiscordClient) -> None:
         after: discord.VoiceState,
     ) -> None:
         # Cleanup: member left an active temp VC that is now empty
-        if before.channel and service.is_active(before.channel.id):
-            if len(before.channel.members) == 0:
-                logger.debug(
-                    f"TempVC: channel {before.channel.id} is empty, cleaning up"
-                )
-                await service.cleanup_channel(before.channel.id)
+        if (
+            before.channel
+            and service.is_active(before.channel.id)
+            and len(before.channel.members) == 0
+        ):
+            logger.debug(f"TempVC: channel {before.channel.id} is empty, cleaning up")
+            await service.cleanup_channel(before.channel.id)
 
         # Creation: member joined the trigger channel
         if not (after.channel and service.is_trigger(after.channel.id)):
@@ -201,10 +207,8 @@ def register(service: TempVCService, client: DiscordClient) -> None:
                         f"TempVC: {member.display_name} already has channel"
                         f" {existing_id}, redirecting"
                     )
-                    try:
+                    with contextlib.suppress(discord.HTTPException):
                         await member.move_to(existing, reason="Already has temp VC")
-                    except discord.HTTPException:
-                        pass
             return
 
         channel = await service.create_channel(member)

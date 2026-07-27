@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from chat_events.models import ClanEventsConfig
 from core.db import engine as db_engine
 from core.db.models import ClanEventsConfig as ClanEventsConfigORM
 from core.db.models import User
-from chat_events.models import ClanEventsConfig
 
 
 class PgChatEventsRepository:

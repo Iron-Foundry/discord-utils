@@ -2,8 +2,8 @@ import asyncio
 
 from loguru import logger
 
-from core.discord_client import DiscordClient
 from core.config import ConfigInterface, ConfigVars
+from core.discord_client import DiscordClient
 
 
 async def main():

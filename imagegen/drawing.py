@@ -129,9 +129,9 @@ def draw_underlined_text(
         (x, y),
         text,
         font=font,
-        anchor=anchor,  # type: ignore[arg-type]
+        anchor=anchor,
     )
-    left, top, right, bottom = bbox
+    left, _top, right, bottom = bbox
 
     text_width = right - left
     underline_width = text_width * (underline_width_percent / 100)
@@ -160,5 +160,5 @@ def draw_underlined_text(
         text,
         font=font,
         fill=fill,
-        anchor=anchor,  # type: ignore[arg-type]
+        anchor=anchor,
     )

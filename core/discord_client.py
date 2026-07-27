@@ -59,7 +59,8 @@ class DiscordClient(discord.Client):
         init_engine(sa_uri)
         await ensure_tables()
 
-        assert self._guild is not None
+        if self._guild is None:
+            raise RuntimeError("Guild is not resolved - cannot load services")
         services = await load_all_services(
             guild=self._guild,
             tree=self.command_handler.tree,

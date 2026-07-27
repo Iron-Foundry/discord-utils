@@ -2,7 +2,17 @@
   "venvPath": ".",
   "venv": ".venv",
   "pythonVersion": "3.14",
+  "pythonPlatform": "Linux",
   "include": ["."],
   "exclude": [".venv"],
-  "typeCheckingMode": "standard"
+  "typeCheckingMode": "standard",
+  "reportUnnecessaryTypeIgnoreComment": "error",
+  "reportMissingParameterType": "error",
+  "reportMissingTypeArgument": "error",
+  "reportUnnecessaryIsInstance": "error",
+  "reportUnnecessaryCast": "error",
+  "reportUnnecessaryComparison": "error",
+  "reportUnnecessaryContains": "error",
+  "reportDeprecated": "error",
+  "reportConstantRedefinition": "error"
 }

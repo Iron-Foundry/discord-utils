@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import io
-from typing import Optional
+from typing import Any
 
 import discord
 from discord import app_commands
@@ -88,12 +88,12 @@ async def raid_autocomplete(
 
 
 def _resolve_entry(
-    value: Optional[str],
+    value: str | None,
     label: str,
     icon_enum: type[BossIcon] | type[SkillIcon],
     color_key: ColorKey,
-    display_names: Optional[dict[str, str]] = None,
-) -> Optional[OTWEntry]:
+    display_names: dict[str, str] | None = None,
+) -> OTWEntry | None:
     """Resolve a raw autocomplete value into an OTWEntry, or None if not provided."""
     if not value:
         return None
@@ -114,12 +114,12 @@ def _resolve_entry(
     )
 
 
-def make_otw_command() -> app_commands.Command:  # type: ignore[type-arg]
+def make_otw_command() -> app_commands.Command[Any, Any, Any]:
     """Return a ready-to-add /otw slash command."""
 
     @app_commands.command(name="otw", description="Generate an Of The Week image")
     @app_commands.describe(
-        date="Date range (e.g. 'March 3–10')",
+        date="Date range (e.g. 'March 3-10')",
         skill="Skill of the week",
         boss="Boss of the week",
         raid="Raid of the week",
@@ -133,9 +133,9 @@ def make_otw_command() -> app_commands.Command:  # type: ignore[type-arg]
     async def otw(
         interaction: discord.Interaction,
         date: str,
-        skill: Optional[str] = None,
-        boss: Optional[str] = None,
-        raid: Optional[str] = None,
+        skill: str | None = None,
+        boss: str | None = None,
+        raid: str | None = None,
     ) -> None:
         logger.debug(f"OTW: invoked by {interaction.user}, date={date!r}")
         await interaction.response.defer()
@@ -192,4 +192,4 @@ def make_otw_command() -> app_commands.Command:  # type: ignore[type-arg]
     ) -> None:
         await handle_check_failure(interaction, error)
 
-    return otw  # type: ignore[return-value]
+    return otw

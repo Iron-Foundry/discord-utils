@@ -78,7 +78,7 @@ def make_help_command(registry: HelpRegistry) -> app_commands.Command[Any, Any, 
             if current.lower() in g.name.lower()
         ]
 
-    return help_cmd  # type: ignore[return-value]
+    return help_cmd
 
 
 def register_help(registry: HelpRegistry) -> None:

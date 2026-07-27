@@ -1,21 +1,22 @@
 from collections.abc import Callable
-from typing import Any, Optional
+from typing import Any
+
 import discord
 from discord import app_commands
 
 
 class CommandHandler:
-    _instance: Optional["CommandHandler"] = None
-    _tree: Optional[app_commands.CommandTree] = None
-    _guild: Optional[discord.Guild] = None
-    _client: Optional[discord.Client] = None
+    _instance: CommandHandler | None = None
+    _tree: app_commands.CommandTree | None = None
+    _guild: discord.Guild | None = None
+    _client: discord.Client | None = None
 
-    def __new__(cls, client: Optional[discord.Client] = None):
+    def __new__(cls, client: discord.Client | None = None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, client: Optional[discord.Client] = None) -> None:
+    def __init__(self, client: discord.Client | None = None) -> None:
         if self._tree is None and client is not None:
             self._tree = app_commands.CommandTree(client)
             self._client = client
@@ -58,7 +59,7 @@ class CommandHandler:
         return decorator
 
     def add_group(
-        self, name: str, description: str, parent: Optional[app_commands.Group] = None
+        self, name: str, description: str, parent: app_commands.Group | None = None
     ) -> app_commands.Group:
         """Create and add a command group"""
         group = app_commands.Group(name=name, description=description)
@@ -77,5 +78,4 @@ class CommandHandler:
         """Sync commands with Discord"""
         if not _global:
             return await self.tree.sync(guild=self._guild)
-        else:
-            return await self.tree.sync()
+        return await self.tree.sync()

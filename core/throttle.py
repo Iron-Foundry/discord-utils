@@ -4,14 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from typing import Generic, TypeVar
 
 from loguru import logger
 
-T = TypeVar("T")
 
-
-class Throttle(Generic[T]):
+class Throttle[T]:
     """Rate-limited queue that processes items via an async worker.
 
     Items are consumed one at a time with a configurable delay between
