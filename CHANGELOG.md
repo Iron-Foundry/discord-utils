@@ -11,6 +11,15 @@ and is never made automatically. The bump happens once, when the accumulated
 work is about to be pushed - not per component. Entries land under Unreleased
 until then.
 
+## [Unreleased]
+
+### Changed
+
+- Session nickname vocabulary trimmed and retuned. A word may now be more than
+  one token, so a nickname can run to three words; it still may not carry
+  punctuation or padding, and every possible pair is still asserted against
+  Discord's 32 character nickname limit.
+
 ## [1.0.0] - 2026-07-29
 
 First stable release. The module has carried the clan's Discord utilities in

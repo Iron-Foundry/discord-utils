@@ -29,11 +29,12 @@ osrs_words = [
   "Nechryael", "Bloodveld", "Kurask", "Turoth", "Dagannoth", "Rockslug",
   "Banshee", "Cockatrice", "Zygomite", "Suqah", "Ankou", "Gargoyle",
   "Basilisk", "Aberrant", "Jelly", "Wyrm", "Drake", "Hydra", "Kalphite",
+  "Mind Goblin",
 
   # Characters
   "Duradel", "Nieve", "Vannaka", "Turael", "Konar", "Krystilia", "Mazchna",
-  "Chaeldar", "Aubury", "Thessalia", "Reldo", "Juna", "Hetty", "Oziach",
-  "Sanfew", "Kaqemeex", "Doric", "Gertrude", "Hans", "Sigmund",
+  "Chaeldar", "Aubury", "Thessalia", "Reldo", "Oziach",
+  "Sanfew", "Kaqemeex", "Doric", "Gertrude", "Hans", "Sigmund", "Mortimer",
 
   # Places
   "Lumbridge", "Varrock", "Falador", "Draynor", "Ardougne", "Catherby",
@@ -43,30 +44,28 @@ osrs_words = [
   "Morytania", "Canifis", "Darkmeyer", "Meiyerditch", "Lletya", "Sophanem",
   "Nardah", "Pollnivneach", "Keldagrim", "Rimmington", "Taverley",
   "Edgeville", "Varlamore", "Barrows", "Gielinor", "Misthalin", "Asgarnia",
-  "Kandarin", "Wilderness",
+  "Kandarin", "Wildy",
 
   # Creatures
-  "Chinchompa", "Terrorbird", "Werewolf", "Hobgoblin", "Goblin", "Imp",
+  "Chinchompa", "Terrorbird", "Werewolf", "Jogre", "Goblin", "Imp",
   "Unicorn", "Wyvern", "Ogre", "Troll", "Ghoul", "Vyre", "Tzhaar", "Gnome",
-  "Penguin", "Dragon",
+  "Dragon",
 ]
 
 music_words = [
   # Beat and rhythm
-  "Beats", "Grooves", "Riffs", "Loops", "Breaks", "Bops", "Thumps", "Drums",
-  "Tempo", "Cadence", "Bassline", "Downbeat",
+  "Beats", "Grooves", "Riffs", "Loops", "Breaks", "Bops", "Thumps",
 
   # Song and voice
   "Tunes", "Melodies", "Anthems", "Ballads", "Shanties", "Hymns", "Chants",
-  "Carols", "Serenades", "Lullabies", "Choruses", "Refrains", "Verses", "Odes",
+  "Lullabies", "Chorus", "Verses",
 
   # Sound and texture
-  "Echoes", "Vibes", "Waves", "Reverb", "Static", "Bass", "Treble",
+  "Echoes", "Vibes", "Reverb", "Static",
   "Harmonics", "Resonance", "Frequency", "Distortion",
 
   # Player and ensemble
-  "Jukebox", "Orchestra", "Choir", "Quartet", "Band", "Maestro", "Cantor",
-  "Piper", "Fiddler", "Drummer", "Busker", "Troubadour", "Soloist",
+  "Jukebox", "Orchestra", "Choir", "Quartet", "Band",
 
   # Format and venue
   "Radio", "Mixtape", "Setlist", "Vinyl", "Cassette", "Records", "Playlist",
@@ -74,5 +73,5 @@ music_words = [
 
   # Classical and dramatic
   "Symphony", "Sonata", "Opus", "Overture", "Interlude", "Crescendo",
-  "Fugue", "Requiem", "Rhapsody", "Nocturne", "Prelude", "Score",
+  "Requiem", "Prelude",
 ]

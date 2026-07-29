@@ -21,9 +21,16 @@ def test_every_pair_fits_the_discord_nickname_limit() -> None:
     assert len(longest) <= NICKNAME_LIMIT, longest
 
 
-def test_words_are_single_tokens() -> None:
+def test_words_are_letters_and_spaces() -> None:
+    # A word may be more than one token, which makes a three-word nickname.
+    # What it may not carry is punctuation or padding: the pair is rendered
+    # straight into a nickname, so anything else shows up verbatim on the bot.
     osrs, music = load_words()
-    offenders = [word for word in (*osrs, *music) if " " in word or not word.isalpha()]
+    offenders = [
+        word
+        for word in (*osrs, *music)
+        if not word.replace(" ", "").isalpha() or word.strip() != word or "  " in word
+    ]
     assert offenders == []
 
 
