@@ -23,7 +23,7 @@ from loguru import logger
 # wavelink fires `wavelink_inactive_player` after this long without playback,
 # which is what tears an idle session down. Empty-channel teardown is separate
 # and immediate: it reacts to voice state instead of waiting for a track to end.
-IDLE_TIMEOUT_SECONDS = 300
+IDLE_TIMEOUT_SECONDS = 900
 EMPTY_CHANNEL_TOKENS = 1
 
 

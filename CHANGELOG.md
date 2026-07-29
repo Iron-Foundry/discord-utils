@@ -15,6 +15,9 @@ until then.
 
 ### Changed
 
+- A session now holds its bot for 15 minutes without playback before wavelink
+  calls it inactive, up from 5. The pool heartbeat refreshes every session key
+  each minute, so the 300 second Valkey TTL still covers the longer wait.
 - Session nickname vocabulary trimmed and retuned. A word may now be more than
   one token, so a nickname can run to three words; it still may not carry
   punctuation or padding, and every possible pair is still asserted against
