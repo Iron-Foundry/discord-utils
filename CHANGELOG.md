@@ -11,7 +11,12 @@ and is never made automatically. The bump happens once, when the accumulated
 work is about to be pushed - not per component. Entries land under Unreleased
 until then.
 
-## [Unreleased]
+## [1.0.0] - 2026-07-29
+
+First stable release. The module has carried the clan's Discord utilities in
+production for some time; 1.0.0 marks the music feature landing and the public
+surface being one the other services are now pinned to - the panel, the command
+bridge and the Valkey session contract.
 
 ### Added
 
