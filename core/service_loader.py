@@ -15,6 +15,7 @@ from core.db.engine import get_session_factory
 if TYPE_CHECKING:
     from chat_events.service import ChatEventsService
     from core.discord_client import DiscordClient
+    from music.service import MusicService
     from temp_vc.service import TempVCService
 
 
@@ -145,21 +146,77 @@ async def load_chat_events_service(
     return service
 
 
+async def load_music_service(
+    guild: discord.Guild,
+    tree: app_commands.CommandTree,
+    registry: HelpRegistry,
+    valkey_uri: str,
+    tokens: list[str],
+    client: DiscordClient,
+    lavalink_uri: str,
+    lavalink_password: str,
+    api_url: str = "",
+    service_key: str = "",
+) -> MusicService | None:
+    """Initialise the music service. Returns None when no player bots are configured."""
+    from valkey.asyncio import Valkey
+
+    from music.commands.registry import register as register_music_commands
+    from music.events import register as register_music_events
+    from music.service import MusicService
+
+    if not tokens:
+        logger.info("Music service skipped - MUSIC_BOT_TOKENS is not set")
+        return None
+
+    service = MusicService(
+        guild=guild,
+        valkey=Valkey.from_url(valkey_uri),
+        tokens=tokens,
+        lavalink_uri=lavalink_uri,
+        lavalink_password=lavalink_password,
+        api_url=api_url,
+        service_key=service_key,
+        valkey_uri=valkey_uri,
+    )
+    await service.initialize()
+    register_music_events(service, client)
+    register_music_commands(service, tree, guild, registry)
+    return service
+
+
 async def load_all_services(
     guild: discord.Guild,
     tree: app_commands.CommandTree,
     registry: HelpRegistry,
     client: DiscordClient,
     valkey_uri: str,
-) -> tuple[TempVCService, ChatEventsService]:
+    music_tokens: list[str] | None = None,
+    lavalink_uri: str = "",
+    lavalink_password: str = "",
+    api_url: str = "",
+    service_key: str = "",
+) -> tuple[TempVCService, ChatEventsService, MusicService | None]:
     """Load all services in parallel, then register stateless commands and /help."""
-    temp_vc, clan_events = await asyncio.gather(
+    temp_vc, clan_events, music = await asyncio.gather(
         load_temp_vc_service(guild, tree, registry, client),
         load_chat_events_service(guild, tree, valkey_uri, client),
+        load_music_service(
+            guild,
+            tree,
+            registry,
+            valkey_uri,
+            music_tokens or [],
+            client,
+            lavalink_uri,
+            lavalink_password,
+            api_url,
+            service_key,
+        ),
     )
     _register_otw_commands(guild, tree, registry)
     _register_roleall_command(guild, tree, registry)
     _register_clan_stats_commands(guild, tree, registry)
     _register_test_event_command(guild, tree, registry)
     _load_help_command(guild, tree, registry)
-    return (temp_vc, clan_events)
+    return (temp_vc, clan_events, music)

@@ -1,6 +1,6 @@
 [project]
 name = "discord-utils"
-version = "0.1.0"
+version = "0.6.1"
 description = "Shared Discord utilities for the Iron Foundry clan."
 readme = "README.md"
 requires-python = ">=3.14"
@@ -17,12 +17,26 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "sqlalchemy[asyncio]>=2.0.49",
     "valkey>=6.1.1",
+    "wavelink>=3.5.2",
 ]
 
 [dependency-groups]
 dev = [
+    "anyio>=4.13.0",
+    "docker>=7.2.0",
     "pyright>=1.1.411",
+    "pytest-asyncio>=1.4.0",
     "ruff>=0.16.0",
+    "testcontainers>=4.15.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-m 'not integration'"
+markers = [
+    "integration: real-infra tests needing a Valkey container (deselected by default)",
 ]
 
 [tool.ruff]
@@ -36,5 +50,7 @@ select = [
 allowed-confusables = ["×", "➕", "➖", "’"]
 
 [tool.ruff.lint.per-file-ignores]
+# assert is the point of a test.
+"tests/**" = ["S101"]
 # StrEnum of environment variable names, not credential values.
 "core/config.py" = ["S105"]

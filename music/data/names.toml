@@ -1,0 +1,78 @@
+# Session nicknames for the music player bots.
+#
+# A nickname is one word from each list, joined by a space, rolled once per
+# session and drawn without replacement against the live set in Valkey so two
+# bots are never named the same thing at once.
+#
+# Discord caps a nickname at 32 characters. Longest pair here is
+# "Pollnivneach Distortion" at 23, and names.py asserts the whole cross product
+# fits at load, so nothing silently truncates.
+#
+# Every OSRS word is a single token, no spaces or apostrophes. Spellings that
+# could plausibly be wrong were checked against RuneLite's id constants in
+# D:\claude-git-references\runelite-repo (runelite-api/src/main/java/net/
+# runelite/api/{NpcID,ItemID,ObjectID}.java).
+
+osrs_words = [
+  # Bosses
+  "Zulrah", "Vorkath", "Cerberus", "Kraken", "Sarachnis", "Scurrius",
+  "Hespori", "Callisto", "Venenatis", "Vetion", "Skotizo", "Obor",
+  "Bryophyta", "Muspah", "Vardorvis", "Araxxor", "Hueycoatl", "Amoxliatl",
+  "Tempoross", "Zalcano", "Wintertodt", "Nightmare", "Gauntlet", "Nex",
+  "Graardor", "Zilyana", "Kreearra", "Jad", "Zuk", "Colosseum",
+
+  # Gods and lore
+  "Guthix", "Saradomin", "Zamorak", "Armadyl", "Bandos", "Zaros", "Seren",
+  "Xeric", "Elidinis", "Tumeken", "Icthlarin", "Amascut",
+
+  # Slayer monsters
+  "Nechryael", "Bloodveld", "Kurask", "Turoth", "Dagannoth", "Rockslug",
+  "Banshee", "Cockatrice", "Zygomite", "Suqah", "Ankou", "Gargoyle",
+  "Basilisk", "Aberrant", "Jelly", "Wyrm", "Drake", "Hydra", "Kalphite",
+
+  # Characters
+  "Duradel", "Nieve", "Vannaka", "Turael", "Konar", "Krystilia", "Mazchna",
+  "Chaeldar", "Aubury", "Thessalia", "Reldo", "Juna", "Hetty", "Oziach",
+  "Sanfew", "Kaqemeex", "Doric", "Gertrude", "Hans", "Sigmund",
+
+  # Places
+  "Lumbridge", "Varrock", "Falador", "Draynor", "Ardougne", "Catherby",
+  "Rellekka", "Karamja", "Yanille", "Camelot", "Zanaris", "Entrana",
+  "Neitiznot", "Miscellania", "Piscarilius", "Hosidius", "Shayzien",
+  "Lovakengj", "Arceuus", "Kourend", "Prifddinas", "Tirannwn", "Isafdar",
+  "Morytania", "Canifis", "Darkmeyer", "Meiyerditch", "Lletya", "Sophanem",
+  "Nardah", "Pollnivneach", "Keldagrim", "Rimmington", "Taverley",
+  "Edgeville", "Varlamore", "Barrows", "Gielinor", "Misthalin", "Asgarnia",
+  "Kandarin", "Wilderness",
+
+  # Creatures
+  "Chinchompa", "Terrorbird", "Werewolf", "Hobgoblin", "Goblin", "Imp",
+  "Unicorn", "Wyvern", "Ogre", "Troll", "Ghoul", "Vyre", "Tzhaar", "Gnome",
+  "Penguin", "Dragon",
+]
+
+music_words = [
+  # Beat and rhythm
+  "Beats", "Grooves", "Riffs", "Loops", "Breaks", "Bops", "Thumps", "Drums",
+  "Tempo", "Cadence", "Bassline", "Downbeat",
+
+  # Song and voice
+  "Tunes", "Melodies", "Anthems", "Ballads", "Shanties", "Hymns", "Chants",
+  "Carols", "Serenades", "Lullabies", "Choruses", "Refrains", "Verses", "Odes",
+
+  # Sound and texture
+  "Echoes", "Vibes", "Waves", "Reverb", "Static", "Bass", "Treble",
+  "Harmonics", "Resonance", "Frequency", "Distortion",
+
+  # Player and ensemble
+  "Jukebox", "Orchestra", "Choir", "Quartet", "Band", "Maestro", "Cantor",
+  "Piper", "Fiddler", "Drummer", "Busker", "Troubadour", "Soloist",
+
+  # Format and venue
+  "Radio", "Mixtape", "Setlist", "Vinyl", "Cassette", "Records", "Playlist",
+  "Soundtrack", "Karaoke", "Jam", "Session", "Encore", "Recital", "Festival",
+
+  # Classical and dramatic
+  "Symphony", "Sonata", "Opus", "Overture", "Interlude", "Crescendo",
+  "Fugue", "Requiem", "Rhapsody", "Nocturne", "Prelude", "Score",
+]

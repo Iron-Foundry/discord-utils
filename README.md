@@ -51,6 +51,11 @@ All configuration is read from a `.env` file in the project root.
 |---|---|---|
 | `VALKEY_URI` | `redis://localhost:6379` | Valkey/Redis connection string. |
 | `DEBUG_MODE` | - | Enable debug logging. |
+| `MUSIC_BOT_TOKENS` | - | Comma-separated player bot tokens, max 5. The count is the music pool size; blank disables music. |
+| `LAVALINK_URI` | `http://localhost:2333` | Lavalink v4 node base URL. |
+| `LAVALINK_PASSWORD` | - | Lavalink node password. Required when `MUSIC_BOT_TOKENS` is set. |
+| `API_BACKEND_URL` | - | api-backend base URL. Needed to read saved playlists; without it the playlist controls are absent. |
+| `METRICS_API_KEY` | - | Shared service key sent as `verification-code` when reading playlists. |
 
 ---
 

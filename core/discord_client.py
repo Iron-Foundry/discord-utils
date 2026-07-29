@@ -61,14 +61,25 @@ class DiscordClient(discord.Client):
 
         if self._guild is None:
             raise RuntimeError("Guild is not resolved - cannot load services")
+
+        from music.service import parse_tokens
+
         services = await load_all_services(
             guild=self._guild,
             tree=self.command_handler.tree,
             registry=self.help_registry,
             client=self,
             valkey_uri=valkey_uri,
+            music_tokens=parse_tokens(
+                self.config.get_variable(ConfigVars.MUSIC_BOT_TOKENS)
+            ),
+            lavalink_uri=self.config.get_variable(ConfigVars.LAVALINK_URI) or "",
+            lavalink_password=self.config.get_variable(ConfigVars.LAVALINK_PASSWORD)
+            or "",
+            api_url=self.config.get_variable(ConfigVars.API_BACKEND_URL) or "",
+            service_key=self.config.get_variable(ConfigVars.METRICS_API_KEY) or "",
         )
-        self.service_handler.register(*services)
+        self.service_handler.register(*(s for s in services if s is not None))
         self._services_loaded = True
 
     @override
