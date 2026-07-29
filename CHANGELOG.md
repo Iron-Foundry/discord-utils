@@ -11,7 +11,7 @@ and is never made automatically. The bump happens once, when the accumulated
 work is about to be pushed - not per component. Entries land under Unreleased
 until then.
 
-## [Unreleased]
+## [1.0.1] - 2026-07-29
 
 ### Changed
 
