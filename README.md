@@ -1,7 +1,7 @@
 # Iron Foundry - Discord Utils
 
-Utility bot for the Iron Foundry OSRS clan. Handles temporary voice channels and
-clan content image generation.
+Utility bot for the Iron Foundry OSRS clan. Handles temporary voice channels, music
+playback, clan content image generation, and the clan event/chat relay.
 
 ---
 
@@ -9,7 +9,9 @@ clan content image generation.
 
 - Python 3.14+
 - [uv](https://docs.astral.sh/uv/) (package manager)
-- A running MongoDB instance shared with `discord-server`
+- A running PostgreSQL instance shared with `discord-server`
+- A running Valkey/Redis instance
+- A Lavalink v4 node (music only - optional)
 
 ---
 
@@ -64,8 +66,17 @@ All configuration is read from a `.env` file in the project root.
 | Group | Description |
 |---|---|
 | `/tempvc` | Configure temporary voice channels - trigger channel setup and GIM group management. |
+| `/whitelist` | Manage your temporary voice channel whitelist. |
 | `/otw` | Generate a styled OSRS Of The Week image for one, two, or three categories. |
 | `/chatevents` | Configure the channel for clan event and chat relay messages. |
+| `/clanstats` | Post clan statistics. |
+| `/roleall` | Bulk role assignment. |
+| `/testevent` | Emit a test clan event through the relay. |
+| `/help` | Browse the registered command groups. |
+
+Music commands register at the top level (not under a `/music` group) and only when
+`MUSIC_BOT_TOKENS` is set: `/play`, `/pause`, `/resume`, `/skip`, `/stop`, `/seek`,
+`/queue`, `/nowplaying`, `/remove`, `/shuffle`, `/loop`, `/volume`, `/playlist`.
 
 ---
 
@@ -77,11 +88,19 @@ core/
   service_loader.py   - async functions that initialise each service; OTW registered after
   command_handler.py  - CommandHandler singleton, owns the slash-command tree
   config.py           - ConfigInterface, env-var access
+  service_base.py     - Service abstract base class
+  service_handler.py  - ServiceHandler lifecycle manager
+  throttle.py         - rate limiting helpers
+  db/                 - PostgreSQL engine and session management
 
+command_infra/        - checks, /help registry, and the standalone commands
+                        (otw, clanstats, roleall, testevent)
 temp_vc/              - Temporary voice channel service and repository
 imagegen/             - PIL-based image renderer for OTW images
   assets/             - Fonts, skill/boss icons, and background image
-commands/             - Slash command definitions
+music/                - Lavalink v4 music service: player-bot pool, queue, playlists,
+                        panel views, and the Valkey bridge to api-backend
+chat_events/          - Clan event and chat relay
 ```
 
 ---
@@ -89,6 +108,12 @@ commands/             - Slash command definitions
 ## Development
 
 ```bash
-uv run ruff check .
 uv run ruff format .
+uv run ruff check . --fix
+uv run pyright
+uv run pytest
 ```
+
+Tests live in `tests/` - unit and contract tests at the top level, real-infra tests
+under `tests/integration/`. From the monorepo root, `./run-tests.sh` runs them
+alongside the other services.
