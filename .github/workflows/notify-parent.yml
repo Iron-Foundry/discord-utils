@@ -4,16 +4,21 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   dispatch:
-    runs-on: codeberg-tiny
+    runs-on: ubuntu-latest
     steps:
       - name: Trigger parent update
         env:
           PAT: ${{ secrets.SUBMODULE_PAT }}
         run: |
-          printf 'header = "Authorization: token %s"\n' "$PAT" | \
+          printf 'header = "Authorization: Bearer %s"\n' "$PAT" | \
           curl -sf -X POST -K - \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
             -H "Content-Type: application/json" \
             -d '{"event_type": "submodule-updated", "client_payload": {"submodule": "discord-utils"}}' \
-            https://codeberg.org/api/v1/repos/IronFoundry/Foundry-Project/dispatches
+            https://api.github.com/repos/Iron-Foundry/Foundry-Project/dispatches
