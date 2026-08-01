@@ -11,6 +11,16 @@ and is never made automatically. The bump happens once, when the accumulated
 work is about to be pushed - not per component. Entries land under Unreleased
 until then.
 
+## [1.0.2] - 2026-08-01
+
+### Security
+
+- aiohttp 3.13.3 -> 3.14.3, pillow 12.1.1 -> 12.3.0 and idna 3.11 -> 3.18,
+  clearing all 40 Dependabot advisories. Lockfile only - no declared
+  constraint moved, and `kaleido==0.2.1` / `plotly<6` are untouched, neither
+  being a dependant of any upgraded package. wavelink and discord.py both
+  accept aiohttp `<4`, so the music path is unaffected.
+
 ## [1.0.1] - 2026-07-29
 
 ### Changed
