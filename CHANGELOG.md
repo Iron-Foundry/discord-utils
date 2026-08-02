@@ -11,6 +11,15 @@ and is never made automatically. The bump happens once, when the accumulated
 work is about to be pushed - not per component. Entries land under Unreleased
 until then.
 
+## [Unreleased]
+
+### Changed
+
+- The integration suite takes its Valkey from the test runner when offered
+  (`TEST_VALKEY_URI`) instead of starting its own container, and each worker
+  takes its own logical database and flushes only that, so it can share one
+  instance with the other suites.
+
 ## [1.0.2] - 2026-08-01
 
 ### Security

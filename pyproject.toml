@@ -26,6 +26,7 @@ dev = [
     "docker>=7.2.0",
     "pyright>=1.1.411",
     "pytest-asyncio>=1.4.0",
+    "pytest-xdist>=3.8.0",
     "ruff>=0.16.0",
     "testcontainers>=4.15.0",
 ]
